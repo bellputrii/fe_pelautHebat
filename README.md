@@ -1,37 +1,155 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🌊 Pelaut Hebat - Ocean Safety Hub (Frontend)
 
-## Getting Started
+**Website edukasi keselamatan pelayaran Indonesia** berbasis React & Next.js. Menyajikan data cuaca maritim real-time, analisis AI, dan sistem peringatan dini berbasis visual interaktif bagi nelayan dan masyarakat pesisir.
 
-First, run the development server:
+---
+
+✨ Fitur Utama
+
+* 🌊 **Dashboard Cuaca Maritim:** Tampilan interaktif gelombang laut, kecepatan angin, suhu, dan tekanan udara
+* 🤖 **Analisis AI Terintegrasi:** Penjelasan kondisi laut dalam bahasa natural dari Google Gemini AI
+* ⏰ **Rekomendasi Waktu Berlayar:** Visualisasi waktu terbaik berdasarkan kondisi cuaca & jenis kapal
+* 🚨 **Peringatan Dini Visual:** UI peringatan interaktif dengan indikator sensitivitas anomali
+* 🌐 **Deteksi Zona Waktu Otomatis:** Menyesuaikan waktu lokal (WIB/WITA/WIT) berdasarkan lokasi pengguna
+* 🔐 **Autentikasi Firebase:** Login dengan Email/Password dan Google OAuth
+* 💨 **Responsif & Cepat:** Dukungan caching dan optimalisasi loading data API
+
+---
+
+🛠️ Tech Stack
+
+| Layer              | Teknologi                                                     |
+| ------------------ | ------------------------------------------------------------- |
+| Frontend Framework | **Next.js 14 (App Router)**                                   |
+| Styling            | **Tailwind CSS**, Heroicons                                   |
+| State Management   | **React Context**, SWR (data fetching & caching)              |
+| Auth               | **Firebase Auth** (Email/Password & Google OAuth)             |
+| API Integrasi      | **Open Meteo API**, **Google Gemini AI**, Ocean Safety Hub BE |
+| Utilities          | Headless UI, Date-fns, React Hook Form, Zod                   |
+| Deployment         | Vercel (recommended)                                          |
+
+---
+
+🚀 Quick Start
+
+📦 Prasyarat
+
+* Node.js 18+
+* npm atau yarn
+* Firebase Project (untuk auth)
+* API Backend Ocean Safety Hub tersedia (lihat dokumentasi backend)
+
+🛠 Instalasi
+
+```bash
+git clone https://github.com/bellputrii/fe_pelautHebat.git
+cd fe_pelautHebat
+npm install
+```
+
+⚙️ Konfigurasi Environment
+
+Buat file `.env.local` dari template:
+
+```bash
+cp .env.example .env.local
+```
+
+Edit isinya sesuai kredensial Firebase dan endpoint backend API:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:3001
+```
+
+---
+
+▶️ Jalankan Dev Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Akses di [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+📁 Struktur Proyek
 
-## Learn More
+```
+src/
+├── app/                  # Struktur routing Next.js App Router
+│   ├── (auth)/           # Layout halaman login/register
+│   ├── dashboard/        # Halaman utama pengguna
+│   ├── weather/          # Visualisasi data cuaca
+│   ├── ai-tools/         # Fitur AI seperti rekomendasi & penjelasan
+│   └── components/       # UI komponen reusable
+├── lib/                  # Firebase, utils, constants
+├── styles/               # Custom Tailwind config
+└── types/                # Tipe data & interface global
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+🔐 Firebase Authentication
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Menggunakan Firebase Auth (Client SDK):
 
-## Deploy on Vercel
+* 🔑 **Login & Register:** Email/Password
+* 🔐 **Google OAuth Login**
+* 📧 **Email Verification & Reset Password**
+* 👤 **Protected Route:** Redirect jika belum login
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# fe_pelautHebat
+📊 Integrasi Backend API
+
+| Fitur                | Endpoint                     | Method | Auth     |
+| -------------------- | ---------------------------- | ------ | -------- |
+| Cuaca Maritim        | `/api/weather/marine`        | GET    | Optional |
+| Penjelasan AI        | `/api/ai/explain-conditions` | POST   | ✅        |
+| Rekomendasi Berlayar | `/api/ai/recommend-times`    | POST   | ✅        |
+| Anomali & Peringatan | `/api/ai/early-warnings`     | GET    | ✅        |
+| Login                | `/api/auth/login`            | POST   | ❌        |
+| Profil               | `/api/auth/profile`          | GET    | ✅        |
+
+---
+
+🧪 Testing (Optional)
+
+Coming soon with Jest & React Testing Library.
+
+---
+
+🌐 Deployment
+
+Gunakan [Vercel](https://vercel.com/) untuk build otomatis.
+
+✅ Setup
+
+* Tambahkan environment variable di dashboard Vercel (copy dari `.env.local`)
+* Jalankan build production:
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+📄 License
+
+MIT © 2025 Ocean Safety Hub - Pelaut Hebat
+
+---
+
+📬 Kontak & Bantuan
+
+* 🌐 Website: [pelauthebat.id](https://pelauthebat.id)
+* 📩 Email: [support@pelaut-hebat.com](mailto:support@pelaut-hebat.com)
+* 🐙 GitHub Issues: [Repo Issues](https://github.com/bellputrii/fe_pelautHebat/issues)
+
+---
