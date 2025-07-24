@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation"; // ⬅️ untuk redirect
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "@/firebase/config";
+
 
 export default function SignUpPage() {
   const router = useRouter(); // ⬅️ inisialisasi router
@@ -58,6 +61,35 @@ export default function SignUpPage() {
       setTimeout(() => setStatus("idle"), 4000);
     }
   };
+
+  const handleGoogleSignUp = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const idToken = await user.getIdToken();
+
+      // Kirim ke backend endpoint khusus signup Google
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google-signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem("token", data.token); // jika backend mengembalikan token
+        router.push("/dashboard"); // arahkan ke halaman setelah signup
+      } else {
+        alert(data?.message || "Registrasi dengan Google gagal.");
+      }
+    } catch (error) {
+      console.error("Google sign-up error:", error);
+      alert("Terjadi kesalahan saat registrasi dengan Google.");
+    }
+  };
+
 
   return (
     <div className="min-h-screen flex">
@@ -135,10 +167,14 @@ export default function SignUpPage() {
           )}
         </button>
 
-        <button className="w-full flex items-center justify-center gap-2 border border-black p-3 rounded-md shadow hover:bg-gray-200">
+        <button
+          onClick={handleGoogleSignUp}
+          className="w-full flex items-center justify-center gap-2 border border-black p-3 rounded-md shadow hover:bg-gray-200"
+        >
           <img src="/google.png" alt="Google" className="w-5 h-5" />
           <span>Sign Up With Google</span>
         </button>
+
       </div>
 
       <div className="hidden md:block w-1/2">

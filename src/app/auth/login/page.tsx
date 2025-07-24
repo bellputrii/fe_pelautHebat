@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "@/firebase/config";
 
 declare global {
   interface Window {
@@ -49,51 +51,33 @@ export default function SignInPage() {
     }
   };
 
-  // ⬇️ Google Sign-In
-  const handleGoogleSignIn = () => {
-    // @ts-ignore
-    google.accounts.id.initialize({
-      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-      callback: async (response: any) => {
-        if (response.credential) {
-          try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google-signin`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ idToken: response.credential }),
-            });
+  const handleGoogleSignIn = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
 
-            const data = await res.json();
-            if (res.ok) {
-              localStorage.setItem("token", data.token);
-              router.push("/dashboard");
-            } else {
-              console.error("Google sign-in server error:", data);
-              alert(data?.message || "Google Sign-In gagal.");
-            }
-          } catch (err) {
-            console.error("Google sign-in error:", err);
-            alert("Terjadi kesalahan saat sign in dengan Google.");
-          }
-        }
-      },
+    const idToken = await user.getIdToken(); // untuk dikirim ke backend (opsional)
+
+    // Kirim token ke backend-mu kalau perlu validasi/token login
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google-signin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
     });
 
-    // @ts-ignore
-    google.accounts.id.prompt();
-  };
+    const data = await res.json();
 
-  // Render Google button jika ingin tombol (opsional)
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.google) {
-      // @ts-ignore
-      google.accounts.id.renderButton(document.getElementById("googleBtn"), {
-        theme: "outline",
-        size: "large",
-        width: "100%",
-      });
+    if (res.ok) {
+      localStorage.setItem("token", data.token); // simpan token dari backend
+      router.push("/dashboard");
+    } else {
+      alert(data?.message || "Login Google gagal.");
     }
-  }, []);
+  } catch (error) {
+    console.error("Google sign-in error:", error);
+    alert("Terjadi kesalahan saat sign in dengan Google.");
+  }
+};
 
   return (
     <div className="min-h-screen flex">
