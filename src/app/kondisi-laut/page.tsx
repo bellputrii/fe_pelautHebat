@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Waves, Wind, AlertTriangle } from 'lucide-react';
 import { auth } from "@/firebase/config";
 
+
 // Import komponen lain seperti biasa
 import LayoutNavbar from '@/components/LayoutNavbar';
 import Footer from '@/components/Footer';
@@ -151,7 +152,7 @@ export default function KondisiLautPage() {
       lat: lat.toString(),
       lng: lng.toString()
     });
-    setShouldFetch(true);
+    // setShouldFetch(true);
   };
 
   // Fetch data when location changes and shouldFetch is true
@@ -159,7 +160,7 @@ export default function KondisiLautPage() {
     if (mapReady && shouldFetch) {
       fetchConditions();
     }
-  }, [location, shouldFetch, mapReady]);
+  }, [location]);
 
   // Initial fetch when map is ready
   useEffect(() => {
@@ -298,9 +299,8 @@ export default function KondisiLautPage() {
               <div className="h-[400px] w-full rounded-xl overflow-hidden shadow-md bg-white border border-gray-100">
                 <LeafletMap 
                   center={[location.lat, location.lng]} 
-                  zoom={11} 
-                  location={location}
-                  setLocation={setLocation}
+                  zoom={11}
+                  onClick={handleMapClick} 
                 />
               </div>
 

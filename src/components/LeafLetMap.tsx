@@ -1,9 +1,35 @@
+// // components/LeafLetMap.tsx (versi sederhana)
+// 'use client';
+
+// import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+// import 'leaflet/dist/leaflet.css';
+
+// export default function LeafLetMap({ center, zoom }: {
+//   center: [number, number];
+//   zoom: number;
+// }) {
+//   return (
+//     <MapContainer 
+//       center={center} 
+//       zoom={zoom} 
+//       style={{ height: '100%', width: '100%' }}
+//     >
+//       <TileLayer
+//         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+//         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+//       />
+//       <Marker position={center} />
+//     </MapContainer>
+//   );
+// }
+
 // components/LeafLetMap.tsx
 'use client';
 
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useEffect } from 'react';
 
 // Fix default marker icons
 const DefaultIcon = L.icon({
@@ -16,29 +42,24 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-export default function LeafLetMap({
-  center,
-  zoom,
-  onClick,
-  onLoad
+function MapEvents({ onClick }: { onClick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onClick(e.latlng.lat, e.latlng.lng);
+    }
+  });
+  return null;
+}
+
+export default function LeafLetMap({ 
+  center, 
+  zoom, 
+  onClick 
 }: {
   center: [number, number];
   zoom: number;
   onClick: (lat: number, lng: number) => void;
-  onLoad?: () => void;
 }) {
-  function MapClickHandler() {
-    useMapEvents({
-      click(e) {
-        onClick(e.latlng.lat, e.latlng.lng);
-      },
-      load() {
-        onLoad?.();
-      }
-    });
-    return null;
-  }
-
   return (
     <MapContainer 
       center={center} 
@@ -50,7 +71,7 @@ export default function LeafLetMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
       <Marker position={center} />
-      <MapClickHandler />
+      <MapEvents onClick={onClick} />
     </MapContainer>
   );
 }
