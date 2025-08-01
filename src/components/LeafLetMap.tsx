@@ -1,17 +1,56 @@
-"use client";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+// components/LeafLetMap.tsx
+'use client';
 
-export default function LeafletMap() {
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix default marker icons
+const DefaultIcon = L.icon({
+  iconUrl: '/marker-icon.png',
+  iconRetinaUrl: '/marker-icon-2x.png',
+  shadowUrl: '/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+export default function LeafLetMap({
+  center,
+  zoom,
+  onClick,
+  onLoad
+}: {
+  center: [number, number];
+  zoom: number;
+  onClick: (lat: number, lng: number) => void;
+  onLoad?: () => void;
+}) {
+  function MapClickHandler() {
+    useMapEvents({
+      click(e) {
+        onClick(e.latlng.lat, e.latlng.lng);
+      },
+      load() {
+        onLoad?.();
+      }
+    });
+    return null;
+  }
+
   return (
-    <MapContainer center={[-7.797068, 110.370529]} zoom={13} style={{ height: "500px", width: "100%" }}>
+    <MapContainer 
+      center={center} 
+      zoom={zoom} 
+      style={{ height: '100%', width: '100%' }}
+    >
       <TileLayer
-        attribution='&copy; OpenStreetMap'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      <Marker position={[-7.797068, 110.370529]}>
-        <Popup>Contoh Marker</Popup>
-      </Marker>
+      <Marker position={center} />
+      <MapClickHandler />
     </MapContainer>
   );
 }

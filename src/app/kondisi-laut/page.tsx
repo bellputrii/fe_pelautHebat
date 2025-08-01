@@ -10,7 +10,15 @@ import LayoutNavbar from '@/components/LayoutNavbar';
 import Footer from '@/components/Footer';
 
 // Import LeafletMap tanpa SSR
-const LeafletMap = dynamic(() => import('@/components/LeafLetMap'), { ssr: false });
+const LeafletMap = dynamic(
+  () => import('@/components/LeafLetMap').then((mod) => mod.default),
+  { 
+    ssr: false,
+    loading: () => <div className="h-full w-full flex items-center justify-center bg-gray-100">
+      <img src="/logo.png" alt="Loading" className="w-8 h-8 animate-spin" />
+    </div>
+  }
+);
 
 type ConditionData = {
   coordinates: {
@@ -62,6 +70,9 @@ export default function KondisiLautPage() {
     lng: '106.8'
   });
   const [authError, setAuthError] = useState('');
+  
+  const [shouldFetch, setShouldFetch] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
 
   // Fetch condition data
   const fetchConditions = async () => {
@@ -124,9 +135,38 @@ export default function KondisiLautPage() {
       setLocation({
         lat,
         lng
-      });
+      } 
+    );
+    setShouldFetch(true);
     }
+    else {
+      setAuthError('Masukkan koordinat yang valid');}
   };
+
+
+  // Handle map click
+  const handleMapClick = (lat: number, lng: number) => {
+    setLocation({ lat, lng });
+    setManualInput({
+      lat: lat.toString(),
+      lng: lng.toString()
+    });
+    setShouldFetch(true);
+  };
+
+  // Fetch data when location changes and shouldFetch is true
+  useEffect(() => {
+    if (mapReady && shouldFetch) {
+      fetchConditions();
+    }
+  }, [location, shouldFetch, mapReady]);
+
+  // Initial fetch when map is ready
+  useEffect(() => {
+    if (mapReady) {
+      setShouldFetch(true);
+    }
+  }, [mapReady]);
 
   const getSafetyColor = () => {
     if (!conditionData) return 'bg-gray-500';
@@ -197,8 +237,11 @@ export default function KondisiLautPage() {
               <div className="bg-white rounded-xl shadow-sm p-4">
                 <h2 className="text-lg font-semibold text-[#053040] border-b pb-2">Lokasi Saat Ini</h2>
                 {loading ? (
-                  <div className="mt-4 text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#053040] mx-auto"></div>
+                  // <div className="mt-4 text-center py-4">
+                  //   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#053040] mx-auto"></div>
+                  // </div>
+                  <div className="h-full w-full flex items-center justify-center bg-gray-100">
+                    <img src="/logo.png" className="w-5 h-5 animate-spin" />
                   </div>
                 ) : conditionData ? (
                   <div className="mt-4 space-y-4">

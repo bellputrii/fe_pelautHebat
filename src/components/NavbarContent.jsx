@@ -12,22 +12,40 @@ export default function NavbarContent() {
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
+      // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+      //   method: 'POST',
+      //   credentials: 'include', // Important for sending cookies
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      // })
+      const idToken = localStorage.getItem('idToken')
+      
+      // 2. Logout dari Firebase
+      await signOut(auth)
+      
+      // 3. Kirim request logout ke backend
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
         method: 'POST',
-        credentials: 'include', // Important for sending cookies
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
         },
+        credentials: 'include' // Untuk menghapus cookie jika ada
       })
 
       if (response.ok) {
         // Redirect to login page or home page after logout
-        router.push('/login')
+        localStorage.removeItem('idToken') // Hapus token dari localStorage
+        router.push('/auth/login')
       } else {
         console.error('Logout failed:', await response.text())
       }
     } catch (error) {
       console.error('Error during logout:', error)
+      // Fallback: tetap bersihkan state dan redirect
+      localStorage.removeItem('idToken')
+      router.push('/auth/login')
     } finally {
       setIsLoggingOut(false)
     }
