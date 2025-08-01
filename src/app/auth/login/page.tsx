@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithPopup } from "firebase/auth";
+import { getAuth, signInWithCustomToken, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth, provider } from "@/firebase/config";
 
 declare global {
@@ -26,6 +26,7 @@ export default function SignInPage() {
     setStatus("loading");
 
     try {
+      // 1. Login ke backend untuk mendapatkan customToken
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -34,50 +35,59 @@ export default function SignInPage() {
 
       const result = await response.json();
 
-      if (response.ok) {
-        setStatus("success");
-        setMessage("Login berhasil!");
-        if (result.token) localStorage.setItem("token", result.token);
-        setTimeout(() => router.push("/dashboard"), 1000);
-      } else {
-        setStatus("error");
-        setMessage(result?.message || "Login gagal.");
+      if (!response.ok) {
+        throw new Error(result?.message || "Login gagal.");
       }
-    } catch (error) {
+
+      // 2. Tukar customToken menjadi ID Token
+      const userCredential = await signInWithCustomToken(auth, result.data.customToken);
+      const idToken = await userCredential.user.getIdToken();
+
+      // 3. Simpan ID Token
+      localStorage.setItem("idToken", idToken);
+      
+      setStatus("success");
+      setMessage("Login berhasil!");
+      setTimeout(() => router.push("/dashboard"), 1000);
+    } catch (error: any) {
       setStatus("error");
-      setMessage("Terjadi kesalahan saat menghubungi server.");
-    } finally {
+      setMessage(error.message || "Terjadi kesalahan saat login");
       setTimeout(() => setStatus("idle"), 4000);
     }
   };
 
   const handleGoogleSignIn = async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+    try {
+      setStatus("loading");
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const idToken = await user.getIdToken();
+      
+      // Simpan ID Token
+      localStorage.setItem("idToken", idToken);
+      
+      // Kirim token ke backend jika diperlukan
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google-signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
 
-    const idToken = await user.getIdToken(); // untuk dikirim ke backend (opsional)
+      const data = await res.json();
 
-    // Kirim token ke backend-mu kalau perlu validasi/token login
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google-signin`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem("token", data.token); // simpan token dari backend
-      router.push("/dashboard");
-    } else {
-      alert(data?.message || "Login Google gagal.");
+      if (res.ok) {
+        setStatus("success");
+        setMessage("Login dengan Google berhasil!");
+        setTimeout(() => router.push("/dashboard"), 1000);
+      } else {
+        throw new Error(data?.message || "Login Google gagal.");
+      }
+    } catch (error: any) {
+      setStatus("error");
+      setMessage(error.message || "Terjadi kesalahan saat sign in dengan Google.");
+      setTimeout(() => setStatus("idle"), 4000);
     }
-  } catch (error) {
-    console.error("Google sign-in error:", error);
-    alert("Terjadi kesalahan saat sign in dengan Google.");
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex">
@@ -135,14 +145,12 @@ export default function SignInPage() {
 
         <button
           onClick={handleGoogleSignIn}
+          disabled={status === "loading"}
           className="w-full flex items-center justify-center gap-2 border border-black p-3 rounded-md shadow hover:bg-gray-200"
         >
           <img src="/google.png" alt="Google" className="w-5 h-5" />
           <span>Sign In With Google</span>
         </button>
-
-        {/* Untuk button render langsung dari Google (opsional) */}
-        {/* <div id="googleBtn" className="mt-4" /> */}
       </div>
 
       <div className="hidden md:block w-1/2">
