@@ -2,9 +2,9 @@
 
 import dynamic from "next/dynamic";
 import { useState, useEffect } from 'react';
-import { Waves, Wind, AlertTriangle, Clock, ChevronDown, Bot, AlertCircle } from 'lucide-react';
+import { Waves, Wind, AlertTriangle, Clock, ChevronDown, Bot, AlertCircle, MapPin } from 'lucide-react';
 import { auth } from "@/firebase/config";
-
+import { useRouter } from 'next/navigation';
 import LayoutNavbar from '@/components/LayoutNavbar';
 import Footer from '@/components/Footer';
 
@@ -56,60 +56,6 @@ type ConditionData = {
   };
 };
 
-type RecommendationData = {
-  coordinates: {
-    latitude: number;
-    longitude: number;
-  };
-  location_string: string;
-  boat_type: string;
-  parameters: {
-    forecast_hours: number;
-    timezone: string;
-  };
-  forecast_data: {
-    location: {
-      latitude: number;
-      longitude: number;
-    };
-    forecast_hours: number;
-    forecast: Array<{
-      time: string;
-      wave_height: number;
-      wave_direction: number;
-      wave_period: number;
-      wind_wave_height: number;
-      wind_wave_direction: number;
-      wind_wave_period: number;
-      swell_wave_height: number;
-      swell_wave_direction: number;
-      swell_wave_period: number;
-      wind_speed: number;
-      wind_direction: number;
-      wind_gusts: number;
-      temperature: number;
-      pressure: number;
-    }>;
-    retrieved_at: string;
-    data_source: string;
-  };
-  ai_recommendations: {
-    boat_type: string;
-    safe_windows: Array<{
-      start_time: string;
-      end_time: string;
-      confidence: string;
-      reason: string;
-      wave_condition: string;
-      wind_condition: string;
-    }>;
-    avoid_times: Array<any>;
-    best_recommendation: string;
-    general_advice: string;
-  };
-  generated_at: string;
-};
-
 type AnomalyData = {
   coordinates: {
     latitude: number;
@@ -141,23 +87,15 @@ type AnomalyData = {
   analyzed_at: string;
 };
 
-const BOAT_TYPES = [
-  { value: 'perahu_kecil', label: 'Perahu Kecil' },
-  { value: 'kapal_nelayan', label: 'Kapal Nelayan' },
-  { value: 'kapal_besar', label: 'Kapal Besar' }
-];
-
 export default function KondisiLautPage() {
   const [location, setLocation] = useState({
     lat: -6.8,
     lng: 106.8,
   });
   const [conditionData, setConditionData] = useState<ConditionData | null>(null);
-  const [recommendationData, setRecommendationData] = useState<RecommendationData | null>(null);
   const [anomalyData, setAnomalyData] = useState<AnomalyData | null>(null);
   const [loading, setLoading] = useState({
     conditions: false,
-    recommendations: false,
     submit: false,
     anomalies: false
   });
@@ -167,8 +105,7 @@ export default function KondisiLautPage() {
   });
   const [authError, setAuthError] = useState('');
   const [mapReady, setMapReady] = useState(false);
-  const [selectedBoatType, setSelectedBoatType] = useState(BOAT_TYPES[0].value);
-  const [showRecommendations, setShowRecommendations] = useState(false);
+  const router = useRouter();
 
   const fetchConditions = async () => {
     setLoading(prev => ({...prev, conditions: true}));
@@ -267,53 +204,6 @@ export default function KondisiLautPage() {
     ]);
   };
 
-  const fetchTimeRecommendations = async () => {
-    setLoading(prev => ({...prev, recommendations: true}));
-    setAuthError('');
-
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        setAuthError("Anda perlu login terlebih dahulu.");
-        setLoading(prev => ({...prev, recommendations: false}));
-        return;
-      }
-
-      const idToken = await currentUser.getIdToken();
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/recommend-times`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          latitude: location.lat,
-          longitude: location.lng,
-          boat_type: selectedBoatType
-        })
-      });
-
-      if (response.status === 401) {
-        setAuthError('Sesi Anda telah habis, silakan login kembali');
-        return;
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        setRecommendationData(data.data);
-        setShowRecommendations(true);
-      } else {
-        setAuthError(data.message || 'Gagal memuat rekomendasi');
-      }
-    } catch (error) {
-      console.error('Error fetching recommendations:', error);
-      setAuthError('Terjadi kesalahan saat menghubungi server');
-    } finally {
-      setLoading(prev => ({...prev, recommendations: false}));
-    }
-  };
-
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(prev => ({...prev, submit: true}));
@@ -354,14 +244,10 @@ export default function KondisiLautPage() {
     }
   };
 
-  const formatTime = (timeString: string) => {
-    return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   return (
     <>
       <LayoutNavbar>
-        <div className="min-h-screen pt-20 p-4 md:p-6 bg-white max-w-7xl mx-auto">
+        <div className="min-h-screen pt-20 p-8 bg-white max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl md:text-3xl font-bold text-[#053040]">Cek Kondisi Laut</h1>
@@ -381,7 +267,10 @@ export default function KondisiLautPage() {
             <div className="lg:col-span-1 space-y-4">
               {/* Coordinate Input Card */}
               <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                <h2 className="text-lg font-semibold text-[#053040] mb-3">Koordinat</h2>
+                <h2 className="text-lg font-semibold text-[#053040] mb-3 flex items-center gap-2">
+                  <MapPin size={18} />
+                  Koordinat
+                </h2>
                 <form onSubmit={handleManualSubmit} className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-[#053040] mb-1">Latitude</label>
@@ -413,34 +302,14 @@ export default function KondisiLautPage() {
                 </form>
               </div>
 
-              {/* Boat Type Card */}
-              <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                <h2 className="text-lg font-semibold text-[#053040] mb-3">Jenis Kapal</h2>
-                <div className="space-y-3">
-                  <div className="relative">
-                    <select
-                      value={selectedBoatType}
-                      onChange={(e) => setSelectedBoatType(e.target.value)}
-                      className="appearance-none w-full border border-gray-200 p-2 rounded-lg text-sm focus:ring-2 focus:ring-[#053040] focus:border-transparent pr-8"
-                    >
-                      {BOAT_TYPES.map((type) => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <ChevronDown size={16} className="text-gray-500" />
-                    </div>
-                  </div>
-                  <button
-                    onClick={fetchTimeRecommendations}
-                    className="flex items-center justify-center gap-2 bg-[#053040] text-white w-full py-2 rounded-lg font-medium hover:bg-[#064261] transition-colors disabled:opacity-50"
-                    disabled={loading.recommendations}
-                  >
-                    <Clock size={16} />
-                    {loading.recommendations ? 'Memuat...' : 'Rekomendasi Waktu'}
-                  </button>
-                </div>
-              </div>
+              {/* Navigation to Forecast Page */}
+              <button
+                onClick={() => router.push('/kondisi-laut/prakiraan')}
+                className="flex items-center justify-center gap-2 bg-[#053040] text-white w-full py-2 rounded-lg font-medium hover:bg-[#064261] transition-colors"
+              >
+                <Clock size={16} />
+                Lihat Prakiraan Cuaca
+              </button>
 
               {/* Quick Status Card */}
               {conditionData && (
@@ -496,18 +365,17 @@ export default function KondisiLautPage() {
                   center={[location.lat, location.lng]} 
                   zoom={11}
                   onClick={handleMapClick}
-                  // onMapReady={() => setMapReady(true)}
                 />
               </div>
 
-              {/* Data Sections */}
+              {/* Current Conditions Summary */}
               {conditionData && (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="bg-[#053040] p-2 rounded-lg">
                       <Waves size={18} className="text-white" />
                     </div>
-                    <h2 className="text-lg font-semibold text-[#053040]">Analisis Kondisi Laut</h2>
+                    <h2 className="text-lg font-semibold text-[#053040]">Kondisi Laut Saat Ini</h2>
                   </div>
                   
                   <div className="grid md:grid-cols-2 gap-4">
@@ -524,9 +392,14 @@ export default function KondisiLautPage() {
                       </p>
                     </div>
                   </div>
-                  
-                  <div className="mt-4 bg-[#f8fafc] p-3 rounded-lg">
-                    <h3 className="text-sm font-medium text-[#053040] mb-2">Ringkasan Teknis</h3>
+                </div>
+              )}
+
+              {/* Technical Summary */}
+              {conditionData && (
+                <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+                  <h3 className="text-sm font-medium text-[#053040] mb-2">Ringkasan Teknis</h3>
+                  <div className="bg-[#f8fafc] p-3 rounded-lg">
                     <p className="text-sm text-gray-700">
                       {conditionData.ai_explanation.technical_summary}
                     </p>
@@ -598,81 +471,6 @@ export default function KondisiLautPage() {
                       </div>
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Recommendations Section */}
-              {showRecommendations && recommendationData && (
-                <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="bg-[#053040] p-2 rounded-lg">
-                      <Clock size={18} className="text-white" />
-                    </div>
-                    <h2 className="text-lg font-semibold text-[#053040]">
-                      Rekomendasi Waktu Berlayar
-                    </h2>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                        <h3 className="font-medium text-[#053040]"></h3>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {BOAT_TYPES.find(t => t.value === recommendationData.boat_type)?.label}
-                        </span>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-sm font-medium text-[#053040] mb-2">Rekomendasi Terbaik</h3>
-                      <div className="bg-green-50 border border-green-100 p-3 rounded-lg">
-                        <p className="text-sm text-green-800">
-                          {recommendationData.ai_recommendations.best_recommendation}
-                        </p>
-                      </div>
-                      
-                      <h3 className="text-sm font-medium text-[#053040] mt-4 mb-2">Waktu Aman</h3>
-                      <div className="space-y-2">
-                        {recommendationData.ai_recommendations.safe_windows.map((window, i) => (
-                          <div key={i} className="bg-blue-50 border border-blue-100 p-3 rounded-lg">
-                            <div className="flex justify-between items-center">
-                              <span className="font-medium text-blue-800 text-sm">
-                                {window.start_time} - {window.end_time}
-                              </span>
-                              <span className={`text-xs px-2 py-1 rounded-full ${
-                                window.confidence === 'TINGGI' ? 'bg-green-100 text-green-800' :
-                                window.confidence === 'SEDANG' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-blue-100 text-blue-800'
-                              }`}>
-                                {window.confidence}
-                              </span>
-                            </div>
-                            <p className="text-xs text-blue-700 mt-1">{window.reason}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-[#053040] mb-2">Saran Umum</h3>
-                      <div className="bg-yellow-50 border border-yellow-100 p-3 rounded-lg">
-                        <p className="text-sm text-yellow-800">
-                          {recommendationData.ai_recommendations.general_advice}
-                        </p>
-                      </div>
-                      
-                      {recommendationData.ai_recommendations.avoid_times.length > 0 && (
-                        <>
-                          <h3 className="text-sm font-medium text-[#053040] mt-4 mb-2">Waktu Berbahaya</h3>
-                          <div className="bg-red-50 border border-red-100 p-3 rounded-lg">
-                            <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
-                              {recommendationData.ai_recommendations.avoid_times.map((time, i) => (
-                                <li key={i}>{time}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
