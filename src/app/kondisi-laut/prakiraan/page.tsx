@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Waves, Wind, Clock, ChevronDown, Bot, MapPin } from 'lucide-react';
+import { Waves, Wind, Clock, ChevronDown, Bot, MapPin, Thermometer, Gauge, Compass, Lightbulb } from 'lucide-react';
 import { auth } from "@/firebase/config";
 import { useRouter } from 'next/navigation';
 import LayoutNavbar from '@/components/LayoutNavbar';
 import Footer from '@/components/Footer';
+import { useTokenRefresh } from '@/app/hooks/useAuth';
+import { authFetch } from '@/app/lib/api';
 
 type ForecastData = {
   time: string;
@@ -64,25 +66,18 @@ export default function PrakiraanPage() {
   const [authError, setAuthError] = useState('');
   const router = useRouter();
 
+  // Initialize token refresh mechanism
+  useTokenRefresh();
+
   const fetchTimeRecommendations = async (lat: number, lng: number) => {
     setLoading(prev => ({...prev, fetch: true}));
     setAuthError('');
 
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        setAuthError("Anda perlu login terlebih dahulu.");
-        setLoading(prev => ({...prev, fetch: false}));
-        return;
-      }
-
-      const idToken = await currentUser.getIdToken();
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/recommend-times`, {
+      const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/recommend-times`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           latitude: lat,
@@ -91,9 +86,12 @@ export default function PrakiraanPage() {
         })
       });
 
-      if (response.status === 401) {
-        setAuthError('Sesi Anda telah habis, silakan login kembali');
-        return;
+      if (!response.ok) {
+        if (response.status === 401) {
+          setAuthError('Sesi Anda telah habis, silakan login kembali');
+          return;
+        }
+        throw new Error('Gagal memuat rekomendasi');
       }
 
       const textResponse = await response.text();
@@ -112,7 +110,9 @@ export default function PrakiraanPage() {
       }
     } catch (error) {
       console.error('Error fetching recommendations:', error);
-      setAuthError('Terjadi kesalahan saat menghubungi server');
+      if (error instanceof Error) {
+        setAuthError(error.message || 'Terjadi kesalahan saat menghubungi server');
+      }
     } finally {
       setLoading(prev => ({...prev, fetch: false}));
     }
@@ -279,21 +279,30 @@ export default function PrakiraanPage() {
                   </div>
                   
                   <div className="bg-[#f8fafc] p-3 rounded-lg">
-                    <span className="text-sm font-medium text-[#053040]">Suhu</span>
+                    <div className="flex items-center gap-2">
+                      <Thermometer size={16} className="text-[#00698f]" />
+                      <span className="text-sm font-medium text-[#053040]">Suhu</span>
+                    </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
                       {recommendationData?.forecast_data?.forecast[0]?.temperature?.toFixed(1) || '-'} °C
                     </p>
                   </div>
                   
                   <div className="bg-[#f8fafc] p-3 rounded-lg">
-                    <span className="text-sm font-medium text-[#053040]">Tekanan Atmosfer</span>
+                    <div className="flex items-center gap-2">
+                      <Gauge size={16} className="text-[#00698f]" />
+                      <span className="text-sm font-medium text-[#053040]">Tekanan Atmosfer</span>
+                    </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
                       {recommendationData?.forecast_data?.forecast[0]?.pressure?.toFixed(1) || '-'} hPa
                     </p>
                   </div>
                   
                   <div className="bg-[#f8fafc] p-3 rounded-lg">
-                    <span className="text-sm font-medium text-[#053040]">Arah Angin</span>
+                    <div className="flex items-center gap-2">
+                      <Compass size={16} className="text-[#00698f]" />
+                      <span className="text-sm font-medium text-[#053040]">Arah Angin</span>
+                    </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
                       {recommendationData?.forecast_data?.forecast[0]?.wind_direction?.toFixed(0) || '-'}°
                     </p>
@@ -340,7 +349,10 @@ export default function PrakiraanPage() {
               {/* Safe Windows */}
               {recommendationData?.ai_recommendations?.safe_windows && (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                  <h2 className="text-lg font-semibold text-[#053040] mb-4">Waktu Berlayar yang Aman</h2>
+                  <h2 className="text-lg font-semibold text-[#053040] mb-4 flex items-center gap-2">
+                    <Clock size={18} />
+                    Waktu Berlayar yang Aman
+                  </h2>
                   
                   <div className="space-y-3">
                     {recommendationData.ai_recommendations.safe_windows.map((window, i) => (
@@ -377,7 +389,10 @@ export default function PrakiraanPage() {
               {/* General Advice */}
               {recommendationData?.ai_recommendations?.general_advice && (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                  <h2 className="text-lg font-semibold text-[#053040] mb-4">Saran untuk Nelayan</h2>
+                  <h2 className="text-lg font-semibold text-[#053040] mb-4 flex items-center gap-2">
+                    <Lightbulb size={18} />
+                    Saran untuk Nelayan
+                  </h2>
                   <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-lg">
                     <p className="text-sm text-yellow-800">
                       {recommendationData.ai_recommendations.general_advice}

@@ -1,22 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { AlertTriangle, CheckCircle, X, Plus } from 'lucide-react';
 import LayoutNavbar from '@/components/LayoutNavbar';
 import Footer from '@/components/Footer';
 import { auth } from '@/firebase/config';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTokenRefresh } from '@/app/hooks/useAuth';
+import { authFetch } from '@/app/lib/api';
 
 type SafetyLevel = 'safe' | 'caution' | 'danger';
 type UrgencyLevel = 'low' | 'medium' | 'high';
 type TideLevel = 'low' | 'medium' | 'high';
 type BoatType = 'perahu_kecil' | 'kapal_nelayan' | 'kapal_besar';
 
-export default function CommunityReportFormPage() {
+type FormErrors = {
+  title?: string;
+  description?: string;
+  address?: string;
+  areaName?: string;
+  latitude?: string;
+  longitude?: string;
+  waveHeight?: string;
+  windSpeed?: string;
+  windDirection?: string;
+  visibility?: string;
+  weatherDescription?: string;
+  seaTemperature?: string;
+  currentStrength?: string;
+  general?: string;
+};
+
+function CommunityReportFormContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  // Get community info from URL parameters
   const communityId = searchParams.get('communityId');
   const communityName = searchParams.get('communityName');
 
@@ -62,6 +80,88 @@ export default function CommunityReportFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  // Initialize token refresh mechanism
+  useTokenRefresh();
+
+  // Validate form function
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!title.trim()) {
+      newErrors.title = 'Judul laporan wajib diisi';
+    } else if (title.length < 5) {
+      newErrors.title = 'Judul harus minimal 5 karakter';
+    } else if (title.length > 100) {
+      newErrors.title = 'Judul tidak boleh lebih dari 100 karakter';
+    }
+
+    if (!description.trim()) {
+      newErrors.description = 'Deskripsi wajib diisi';
+    } else if (description.length < 20) {
+      newErrors.description = 'Deskripsi harus minimal 20 karakter';
+    } else if (description.length > 1000) {
+      newErrors.description = 'Deskripsi tidak boleh lebih dari 1000 karakter';
+    }
+
+    if (!address.trim()) {
+      newErrors.address = 'Alamat wajib diisi';
+    } else if (address.length < 5) {
+      newErrors.address = 'Alamat harus minimal 5 karakter';
+    }
+
+    if (!areaName.trim()) {
+      newErrors.areaName = 'Nama area wajib diisi';
+    }
+
+    if (latitude < -90 || latitude > 90) {
+      newErrors.latitude = 'Latitude harus antara -90 dan 90';
+    }
+
+    if (longitude < -180 || longitude > 180) {
+      newErrors.longitude = 'Longitude harus antara -180 dan 180';
+    }
+
+    if (waveHeight < 0 || waveHeight > 50) {
+      newErrors.waveHeight = 'Tinggi gelombang harus antara 0 dan 50 meter';
+    }
+
+    if (windSpeed < 0 || windSpeed > 300) {
+      newErrors.windSpeed = 'Kecepatan angin harus antara 0 dan 300 km/jam';
+    }
+
+    if (windDirection < 0 || windDirection > 360) {
+      newErrors.windDirection = 'Arah angin harus antara 0 dan 360 derajat';
+    }
+
+    if (visibility < 0 || visibility > 100) {
+      newErrors.visibility = 'Visibilitas harus antara 0 dan 100 km';
+    }
+
+    if (!weatherDescription.trim()) {
+      newErrors.weatherDescription = 'Deskripsi cuaca wajib diisi';
+    }
+
+    if (seaTemperature < -2 || seaTemperature > 40) {
+      newErrors.seaTemperature = 'Suhu laut harus antara -2°C dan 40°C';
+    }
+
+    if (currentStrength < 0 || currentStrength > 10) {
+      newErrors.currentStrength = 'Kekuatan arus harus antara 0 (lemah) dan 10 (kuat)';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      validateForm();
+    }
+  }, [title, description, address, areaName, latitude, longitude, waveHeight, 
+      windSpeed, windDirection, visibility, weatherDescription, seaTemperature, 
+      currentStrength]);
 
   const handleAddAction = () => {
     if (newAction.trim() && !recommendedActions.includes(newAction.trim())) {
@@ -93,123 +193,119 @@ export default function CommunityReportFormPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  setError('');
-  setSuccess('');
-  setAuthError(''); // Clear any previous auth errors
-
-  try {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      setAuthError("Anda perlu login terlebih dahulu");
-      setIsSubmitting(false);
+    e.preventDefault();
+    
+    if (!validateForm()) {
       return;
     }
+    
+    setIsSubmitting(true);
+    setError('');
+    setSuccess('');
+    setAuthError('');
 
-    // Get the ID token
-    const idToken = await currentUser.getIdToken();
-    console.log("ID Token:", idToken); // For debugging
+    try {
+      if (!communityId) {
+        throw new Error('Komunitas tidak valid');
+      }
 
-    if (!communityId) {
-      throw new Error('Komunitas tidak valid');
-    }
-
-    // Prepare the report data
-    const reportData = {
-      community_id: communityId,
-      title: title || "Laporan Kondisi Laut",
-      description: description || "Tidak ada deskripsi",
-      location: {
-        latitude: Number(latitude),
-        longitude: Number(longitude),
-        address: address || "Lokasi tidak ditentukan",
-        area_name: areaName || "Area tidak ditentukan"
-      },
-      conditions: {
-        wave_height: Number(waveHeight),
-        wind_speed: Number(windSpeed),
-        wind_direction: Number(windDirection),
-        visibility: Number(visibility),
-        weather_description: weatherDescription,
-        sea_temperature: Number(seaTemperature),
-        current_strength: Number(currentStrength),
-        tide_level: tideLevel
-      },
-      safety_assessment: {
-        overall_safety: overallSafety,
-        boat_recommendations: {
-          perahu_kecil: boatRecommendations.perahu_kecil,
-          kapal_nelayan: boatRecommendations.kapal_nelayan,
-          kapal_besar: boatRecommendations.kapal_besar
+      const reportData = {
+        community_id: communityId,
+        title: title || "Laporan Kondisi Laut",
+        description: description || "Tidak ada deskripsi",
+        location: {
+          latitude: Number(latitude),
+          longitude: Number(longitude),
+          address: address || "Lokasi tidak ditentukan",
+          area_name: areaName || "Area tidak ditentukan"
         },
-        recommended_actions: recommendedActions
-      },
-      tags: tags,
-      urgency_level: urgencyLevel
-    };
+        conditions: {
+          wave_height: Number(waveHeight),
+          wind_speed: Number(windSpeed),
+          wind_direction: Number(windDirection),
+          visibility: Number(visibility),
+          weather_description: weatherDescription,
+          sea_temperature: Number(seaTemperature),
+          current_strength: Number(currentStrength),
+          tide_level: tideLevel
+        },
+        safety_assessment: {
+          overall_safety: overallSafety,
+          boat_recommendations: {
+            perahu_kecil: boatRecommendations.perahu_kecil,
+            kapal_nelayan: boatRecommendations.kapal_nelayan,
+            kapal_besar: boatRecommendations.kapal_besar
+          },
+          recommended_actions: recommendedActions
+        },
+        tags: tags,
+        urgency_level: urgencyLevel
+      };
 
-    console.log("Data yang akan dikirim:", JSON.stringify(reportData, null, 2));
+      const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData)
+      });
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/report`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${idToken}`
-      },
-      body: JSON.stringify(reportData)
-    });
+      if (!response.ok) {
+        if (response.status === 401) {
+          setAuthError('Sesi Anda telah habis, silakan login kembali');
+          return;
+        }
+        
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
 
-    // Handle 401 Unauthorized specifically
-    if (response.status === 401) {
-      setAuthError('Sesi Anda telah habis, silakan login kembali');
-      return;
+      const result = await response.json();
+      setSuccess('Laporan berhasil dikirim!');
+      
+      setTimeout(() => {
+        router.push(`/peta-komunitas/reports?communityId=${communityId}&communityName=${encodeURIComponent(communityName || '')}`);
+      }, 1500);
+
+    } catch (err) {
+      console.error("Error saat submit:", err);
+      if (err instanceof Error) {
+        setError(authError || err.message);
+      } else {
+        setError('Terjadi kesalahan saat mengirim laporan');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    // Handle other error statuses
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error detail dari server:", errorData);
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log("Response sukses:", result);
-
-    setSuccess('Laporan berhasil dikirim!');
-    setTimeout(() => {
-      router.push(`/peta-komunitas/reports?communityId=${communityId}&communityName=${encodeURIComponent(communityName || '')}`);
-    }, 1500);
-
-  } catch (err) {
-    console.error("Error saat submit:", err);
-    if (err instanceof Error) {
-      // Prioritize auth error message if exists
-      setError(authError || err.message);
-    } else {
-      setError('Terjadi kesalahan saat mengirim laporan');
-    }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  const ErrorMessage = ({ message }: { message?: string }) => {
+    if (!message) return null;
+    
+    return (
+      <div className="mt-1 flex items-center text-red-500 text-sm">
+        <AlertTriangle className="h-4 w-4 mr-1" />
+        <span>{message}</span>
+      </div>
+    );
+  };
 
   if (error) {
     return (
       <LayoutNavbar>
         <div className="min-h-screen pt-20 p-4 max-w-4xl mx-auto">
-          <div className="bg-red-100 border-l-4 border-red-500 p-4 mb-6">
-            <div className="flex items-center">
-              <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-              <p className="text-red-700">{error}</p>
+          <div className="bg-red-100 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-start">
+            <AlertTriangle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-red-700 font-medium">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 text-sm text-red-600 underline hover:text-red-800"
+              >
+                Klik di sini untuk mencoba lagi
+              </button>
             </div>
           </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            Coba Lagi
-          </button>
         </div>
       </LayoutNavbar>
     );
@@ -226,10 +322,28 @@ export default function CommunityReportFormPage() {
             </div>
 
             {success && (
-              <div className="bg-green-100 border-l-4 border-green-500 p-4 mb-6 rounded">
-                <div className="flex items-center">
-                  <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  <p className="text-green-700">{success}</p>
+              <div className="bg-green-100 border-l-4 border-green-500 p-4 mb-6 rounded-lg flex items-start">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-green-700 font-medium">{success}</p>
+                  <p className="text-green-600 text-sm mt-1">Laporan Anda telah berhasil dikirim dan akan segera diproses.</p>
+                </div>
+              </div>
+            )}
+
+            {(error || authError) && (
+              <div className="bg-red-100 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-start">
+                <AlertTriangle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-red-700 font-medium">{error || authError}</p>
+                  {authError && (
+                    <button
+                      onClick={() => router.push('/login')}
+                      className="mt-2 text-sm text-red-600 underline hover:text-red-800"
+                    >
+                      Klik di sini untuk login
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -246,9 +360,10 @@ export default function CommunityReportFormPage() {
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="Contoh: Cuaca Cerah - Kondisi Ideal untuk Berlayar"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.title} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi*</label>
@@ -256,10 +371,16 @@ export default function CommunityReportFormPage() {
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       placeholder="Deskripsikan kondisi secara detail..."
                       required
                     />
+                    <div className="flex justify-between items-center mt-1">
+                      <ErrorMessage message={errors.description} />
+                      <span className={`text-xs ${description.length < 20 ? 'text-red-500' : 'text-gray-500'}`}>
+                        {description.length}/1000 karakter
+                      </span>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tingkat Urgensi*</label>
@@ -291,10 +412,11 @@ export default function CommunityReportFormPage() {
                       type="text"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.address ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       placeholder="Contoh: Kepulauan Seribu, DKI Jakarta"
                       required
                     />
+                    <ErrorMessage message={errors.address} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nama Area*</label>
@@ -302,10 +424,11 @@ export default function CommunityReportFormPage() {
                       type="text"
                       value={areaName}
                       onChange={(e) => setAreaName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.areaName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       placeholder="Contoh: Perairan Kepulauan Seribu"
                       required
                     />
+                    <ErrorMessage message={errors.areaName} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Latitude*</label>
@@ -314,9 +437,10 @@ export default function CommunityReportFormPage() {
                       step="0.000001"
                       value={latitude}
                       onChange={(e) => setLatitude(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.latitude ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.latitude} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Longitude*</label>
@@ -325,9 +449,10 @@ export default function CommunityReportFormPage() {
                       step="0.000001"
                       value={longitude}
                       onChange={(e) => setLongitude(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.longitude ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.longitude} />
                   </div>
                 </div>
               </div>
@@ -343,9 +468,10 @@ export default function CommunityReportFormPage() {
                       step="0.1"
                       value={waveHeight}
                       onChange={(e) => setWaveHeight(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.waveHeight ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.waveHeight} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Kecepatan Angin (km/jam)*</label>
@@ -353,9 +479,10 @@ export default function CommunityReportFormPage() {
                       type="number"
                       value={windSpeed}
                       onChange={(e) => setWindSpeed(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.windSpeed ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.windSpeed} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Arah Angin (derajat)*</label>
@@ -363,9 +490,10 @@ export default function CommunityReportFormPage() {
                       type="number"
                       value={windDirection}
                       onChange={(e) => setWindDirection(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.windDirection ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.windDirection} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Visibilitas (km)*</label>
@@ -374,9 +502,10 @@ export default function CommunityReportFormPage() {
                       step="0.1"
                       value={visibility}
                       onChange={(e) => setVisibility(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.visibility ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.visibility} />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi Cuaca*</label>
@@ -384,9 +513,10 @@ export default function CommunityReportFormPage() {
                       type="text"
                       value={weatherDescription}
                       onChange={(e) => setWeatherDescription(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.weatherDescription ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.weatherDescription} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Suhu Laut (°C)*</label>
@@ -395,9 +525,10 @@ export default function CommunityReportFormPage() {
                       step="0.1"
                       value={seaTemperature}
                       onChange={(e) => setSeaTemperature(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.seaTemperature ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.seaTemperature} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Kekuatan Arus*</label>
@@ -405,9 +536,10 @@ export default function CommunityReportFormPage() {
                       type="number"
                       value={currentStrength}
                       onChange={(e) => setCurrentStrength(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-3 py-2 border ${errors.currentStrength ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                       required
                     />
+                    <ErrorMessage message={errors.currentStrength} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tinggi Pasang*</label>
@@ -562,9 +694,17 @@ export default function CommunityReportFormPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 flex items-center justify-center"
                 >
-                  {isSubmitting ? 'Mengirim...' : 'Kirim Laporan'}
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Mengirim...
+                    </>
+                  ) : 'Kirim Laporan'}
                 </button>
               </div>
             </form>
@@ -573,5 +713,13 @@ export default function CommunityReportFormPage() {
       </LayoutNavbar>
       <Footer />
     </>
+  );
+}
+
+export default function CommunityReportFormPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CommunityReportFormContent />
+    </Suspense>
   );
 }

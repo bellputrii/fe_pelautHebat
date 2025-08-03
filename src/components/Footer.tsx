@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Waves, Shield, FileText, Mail, Github } from 'lucide-react'
+import { Waves, Shield, FileText, Mail } from 'lucide-react'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -26,10 +26,10 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4">Navigasi</h3>
             <ul className="space-y-2 text-[#C9CFCF]">
-              <li><Link href="/" className="hover:text-white transition">Beranda</Link></li>
-              <li><Link href="/cuaca" className="hover:text-white transition">Checklist</Link></li>
-              <li><Link href="/peta" className="hover:text-white transition">Peta Komunitas</Link></li>
-              <li><Link href="/laut" className="hover:text-white transition">Kondisi Laut</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white transition">Beranda</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white transition">Checklist</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white transition">Peta Komunitas</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white transition">Kondisi Laut</Link></li>
             </ul>
           </div>
 
@@ -38,17 +38,17 @@ export default function Footer() {
             <h3 className="font-semibold text-lg mb-4">Legal</h3>
             <ul className="space-y-2 text-[#C9CFCF]">
               <li>
-                <Link href="/privacy" className="flex items-center gap-2 hover:text-white transition">
+                <Link href="/dashboard" className="flex items-center gap-2 hover:text-white transition">
                   <Shield size={16} /> Kebijakan Privasi
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="flex items-center gap-2 hover:text-white transition">
+                <Link href="/dashboard" className="flex items-center gap-2 hover:text-white transition">
                   <FileText size={16} /> Ketentuan Layanan
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="flex items-center gap-2 hover:text-white transition">
+                <Link href="/dashboard" className="flex items-center gap-2 hover:text-white transition">
                   <Mail size={16} /> Kontak Kami
                 </Link>
               </li>
@@ -62,11 +62,6 @@ export default function Footer() {
               <p>Version: {version}</p>
               <p>© {currentYear} Pelaut Hebat</p>
               <p>All rights reserved</p>
-              <div className="flex gap-4 mt-4">
-                <Link href="https://github.com/your-repo" target="_blank" className="hover:text-white transition">
-                  <Github size={20} />
-                </Link>
-              </div>
             </div>
           </div>
         </div>

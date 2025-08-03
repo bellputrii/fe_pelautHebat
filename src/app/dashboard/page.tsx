@@ -1,9 +1,15 @@
+'use client';
+
 import LayoutNavbar from '@/components/LayoutNavbar'
 import Footer from '@/components/Footer'
 import Image from 'next/image'
-import { Quote, Waves, Cloud, Map, Shield, AlertTriangle, Flag } from 'lucide-react'
+import { Quote, Waves, Cloud, Map, Shield, AlertTriangle, Flag, Droplets, Wind, Gauge } from 'lucide-react'
+import { useTokenRefresh } from '@/app/hooks/useAuth'
 
 export default function DashboardPage() {
+  // Initialize token refresh mechanism
+  useTokenRefresh();
+
   return (
     <LayoutNavbar>
       <div className="space-y-24 pt-28 pb-12">
@@ -85,17 +91,20 @@ export default function DashboardPage() {
               { 
                 title: 'Tips Cuaca Buruk di Laut', 
                 desc: 'Durasi 2 menit',
-                icon: <AlertTriangle className="text-[#053040]" size={20} />
+                icon: <AlertTriangle className="text-[#053040]" size={20} />,
+                image: '/cuaca.jpg'
               },
               { 
                 title: '5 Alat Keselamatan Wajib', 
                 desc: 'Panduan alat pelindung dasar di kapal',
-                icon: <Shield className="text-[#053040]" size={20} />
+                icon: <Shield className="text-[#053040]" size={20} />,
+                image: '/alat-keselamatan.jpeg'
               },
               { 
                 title: 'Kode Warna Bendera Laut', 
                 desc: 'Pelajari arti bendera di laut',
-                icon: <Flag className="text-[#053040]" size={20} />
+                icon: <Flag className="text-[#053040]" size={20} />,
+                image: '/arti-bendera.jpg'
               }
             ].map((item, i) => (
               <div
@@ -104,7 +113,7 @@ export default function DashboardPage() {
               >
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={`/safety-${i+1}.jpg`}
+                    src={item.image}
                     alt={item.title}
                     fill
                     className="object-cover group-hover:scale-105 transition duration-500"
@@ -126,7 +135,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Ringkasan Cuaca & Gelombang */}
+        {/* Enhanced Ringkasan Cuaca & Gelombang */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-[#053040] mb-2">Ringkasan Cuaca & Gelombang Laut</h2>
@@ -135,46 +144,103 @@ export default function DashboardPage() {
               Informasi terkini tentang kondisi laut yang disajikan secara jelas dan mudah dipahami.
             </p>
           </div>
+          
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-6 border rounded-xl shadow-sm bg-white">
-              <div className="flex items-center gap-3 mb-4">
-                <Cloud className="text-[#053040]" size={24} />
-                <h4 className="font-semibold text-lg">Manyeuw, Maluku, Indonesia</h4>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-[#053040]">29°C</div>
-                <div className="text-sm text-[#4C5F6B] bg-[#2C5B6B]/10 px-3 py-1 rounded-full">
-                  Umumnya berawan
+            {/* Weather Card - Enhanced */}
+            <div className="bg-gradient-to-br from-[#053040] to-[#2C5B6B] rounded-2xl shadow-lg overflow-hidden text-white">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Cloud className="text-white" size={24} />
+                    <h4 className="font-semibold text-lg">Manyeuw, Maluku</h4>
+                  </div>
+                  <div className="text-xs bg-white/20 px-3 py-1 rounded-full">
+                    Updated: 10:45 AM
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-5xl font-bold">29°C</div>
+                  <div className="text-right">
+                    <div className="text-sm opacity-80">Umumnya berawan</div>
+                    <div className="text-xs mt-1 opacity-60">H: 31° L: 27°</div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                    <Wind className="mx-auto mb-1" size={20} />
+                    <div className="text-xs opacity-80">Angin</div>
+                    <div className="font-medium">12 km/j</div>
+                  </div>
+                  <div className="bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                    <Droplets className="mx-auto mb-1" size={20} />
+                    <div className="text-xs opacity-80">Kelembaban</div>
+                    <div className="font-medium">78%</div>
+                  </div>
+                  <div className="bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                    <Waves className="mx-auto mb-1" size={20} />
+                    <div className="text-xs opacity-80">Gelombang</div>
+                    <div className="font-medium">1.96m</div>
+                  </div>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
-                <div>
-                  <div className="font-medium text-[#053040]">Angin</div>
-                  <div className="text-[#4C5F6B]">12 km/j</div>
-                </div>
-                <div>
-                  <div className="font-medium text-[#053040]">Kelembaban</div>
-                  <div className="text-[#4C5F6B]">78%</div>
-                </div>
-                <div>
-                  <div className="font-medium text-[#053040]">Gelombang</div>
-                  <div className="text-[#4C5F6B]">1.96m</div>
+              
+              <div className="bg-white/10 px-6 py-3 border-t border-white/20">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Periode Gelombang:</span>
+                  <span className="font-medium">11.5 detik</span>
                 </div>
               </div>
             </div>
-            <div className="p-6 border rounded-xl shadow-sm bg-white">
-              <div className="flex items-center gap-3 mb-4">
-                <Waves className="text-[#053040]" size={24} />
-                <h4 className="font-semibold text-lg">Rekomendasi Pelayaran</h4>
-              </div>
-              <p className="text-sm text-[#4C5F6B] leading-relaxed space-y-2">
-                <p>Dengan kondisi laut saat ini, tinggi gelombang mencapai sekitar <span className="font-semibold">1,96 meter</span>, yang tergolong cukup tinggi untuk kapal nelayan tradisional.</p>
-                <p>Periode gelombang sekitar <span className="font-semibold">11,5 detik</span> menunjukkan jarak antar gelombang yang jauh, namun tetap berbahaya karena ukuran gelombangnya besar.</p>
-                <div className="mt-4 p-3 bg-[#2C5B6B]/10 rounded-lg border-l-4 border-[#053040]">
-                  <p className="font-medium text-[#053040]">Kesimpulan:</p>
-                  <p>Kondisi saat ini tidak aman untuk pelayaran dengan kapal kecil atau tradisional. Disarankan untuk menunda keberangkatan hingga gelombang laut lebih tenang, diperkirakan sekitar pukul 12.30.</p>
+            
+            {/* Recommendation Card - Enhanced */}
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#E5E7EB]">
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Waves className="text-[#053040]" size={24} />
+                  <h4 className="font-semibold text-lg">Rekomendasi Pelayaran</h4>
                 </div>
-              </p>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-2 h-2 bg-[#053040] rounded-full"></div>
+                    </div>
+                    <p className="text-sm text-[#4C5F6B]">
+                      Tinggi gelombang saat ini mencapai <span className="font-semibold text-[#053040]">1,96 meter</span>, tergolong cukup tinggi untuk kapal nelayan tradisional.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-2 h-2 bg-[#053040] rounded-full"></div>
+                    </div>
+                    <p className="text-sm text-[#4C5F6B]">
+                      Periode gelombang <span className="font-semibold text-[#053040]">11,5 detik</span> menunjukkan jarak antar gelombang yang jauh, namun tetap berbahaya karena ukuran gelombangnya besar.
+                    </p>
+                  </div>
+                  
+                  <div className="mt-6 p-4 bg-[#F8FAFC] rounded-lg border-l-4 border-[#053040]">
+                    <div className="flex items-start gap-2">
+                      <Gauge className="text-[#053040] flex-shrink-0 mt-0.5" size={18} />
+                      <div>
+                        <p className="font-medium text-[#053040] text-sm mb-1">Kesimpulan:</p>
+                        <p className="text-sm text-[#4C5F6B]">
+                          Kondisi saat ini <span className="font-semibold">tidak aman</span> untuk pelayaran dengan kapal kecil atau tradisional. Disarankan untuk menunda keberangkatan hingga gelombang laut lebih tenang, diperkirakan sekitar pukul <span className="font-semibold">12.30</span>.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-[#F8FAFC] px-6 py-3 border-t border-[#E5E7EB] text-sm text-[#4C5F6B]">
+                <div className="flex items-center justify-between">
+                  <span>Update berikutnya:</span>
+                  <span className="font-medium">11:30 AM</span>
+                </div>
+              </div>
             </div>
           </div>
         </section>

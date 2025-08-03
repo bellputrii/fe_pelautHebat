@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import LayoutNavbar from '@/components/LayoutNavbar'
-import Footer from '@/components/Footer'
-import Image from 'next/image'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Check, ChevronRight, Info, Loader2, AlertTriangle } from 'lucide-react'
+import { useState, useEffect, Suspense } from "react";
+import LayoutNavbar from '@/components/LayoutNavbar';
+import Footer from '@/components/Footer';
+import Image from 'next/image';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Check, ChevronRight, Info, Loader2, AlertTriangle } from 'lucide-react';
 import { auth } from "@/firebase/config";
+import { useTokenRefresh } from '@/app/hooks/useAuth';
+import { authFetch } from '@/app/lib/api';
 
 type ChecklistItem = {
   id: string;
@@ -41,7 +43,7 @@ type ProgressData = {
   completion_percentage: number;
 };
 
-export default function HasilPanduanPage() {
+function HasilPanduanContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('sessionId');
@@ -59,6 +61,9 @@ export default function HasilPanduanPage() {
   });
   const [currentlyUpdating, setCurrentlyUpdating] = useState<string | null>(null);
 
+  // Initialize token refresh mechanism
+  useTokenRefresh();
+
   useEffect(() => {
     if (!sessionId) {
       setError("Session ID tidak valid");
@@ -71,19 +76,10 @@ export default function HasilPanduanPage() {
         setIsLoading(true);
         setError(null);
 
-        const currentUser = auth.currentUser;
-        if (!currentUser) {
-          throw new Error("Anda perlu login terlebih dahulu");
-        }
-        const idToken = await currentUser.getIdToken();
-
-        const response = await fetch(
+        const response = await authFetch(
           `${process.env.NEXT_PUBLIC_API_URL}/guide/session/${sessionId}/checklist`,
           {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${idToken}`
-            }
+            method: 'POST'
           }
         );
 
@@ -123,19 +119,12 @@ export default function HasilPanduanPage() {
       setCurrentlyUpdating(itemId);
       setError(null);
 
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        throw new Error("Anda perlu login terlebih dahulu");
-      }
-      const idToken = await currentUser.getIdToken();
-
-      const response = await fetch(
+      const response = await authFetch(
         `${process.env.NEXT_PUBLIC_API_URL}/guide/session/${sessionId}/checklist/${itemId}`,
         {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({ is_completed: isCompleted })
         }
@@ -146,23 +135,64 @@ export default function HasilPanduanPage() {
         throw new Error(errorData.message || "Gagal mengupdate checklist");
       }
 
-      const result = await response.json();
-      
-      // Update local state with server response
+      // Update local state optimistically
       setChecklist(prev => prev.map(item => 
         item.id === itemId ? { ...item, is_completed: isCompleted } : item
       ));
       
-      // Update progress from server response
-      if (result.data?.progress) {
-        setProgress(result.data.progress);
-      }
+      // Calculate new progress
+      const updatedChecklist = checklist.map(item => 
+        item.id === itemId ? { ...item, is_completed: isCompleted } : item
+      );
+      
+      const newCompletedItems = updatedChecklist.filter(item => item.is_completed).length;
+      const newCompletedMandatory = updatedChecklist.filter(item => item.is_mandatory && item.is_completed).length;
+      
+      setProgress({
+        total_items: checklist.length,
+        completed_items: newCompletedItems,
+        mandatory_items: checklist.filter(item => item.is_mandatory).length,
+        completed_mandatory: newCompletedMandatory,
+        completion_percentage: Math.round((newCompletedItems / checklist.length) * 100)
+      });
 
     } catch (err) {
       console.error("Error updating checklist item:", err);
       setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+      
+      // Revert optimistic update
+      setChecklist(prev => prev.map(item => 
+        item.id === itemId ? { ...item, is_completed: !isCompleted } : item
+      ));
     } finally {
       setCurrentlyUpdating(null);
+    }
+  };
+
+  const handleNavigateToSummary = async () => {
+    try {
+      setIsLoading(true);
+      
+      // First complete the session
+      const completeResponse = await authFetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/guide/session/${sessionId}/complete`,
+        {
+          method: 'POST'
+        }
+      );
+
+      if (!completeResponse.ok) {
+        throw new Error("Gagal menyelesaikan sesi");
+      }
+
+      // Then navigate to summary
+      router.push(`/checklist/hasil-panduan/summary?sessionId=${sessionId}`);
+      
+    } catch (err) {
+      console.error("Error completing session:", err);
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -202,10 +232,6 @@ export default function HasilPanduanPage() {
             <span>{tripPurposeMap[tripInfo.trip_purpose] || tripInfo.trip_purpose}</span>
           </p>
           <p className="flex items-start">
-            <span className="font-semibold w-28 flex-shrink-0">Rute:</span> 
-            <span>{tripInfo.departure_location} → {tripInfo.destination_location}</span>
-          </p>
-          <p className="flex items-start">
             <span className="font-semibold w-28 flex-shrink-0">Durasi:</span> 
             <span>{durationText} (PP)</span>
           </p>
@@ -230,239 +256,255 @@ export default function HasilPanduanPage() {
 
   if (isLoading) {
     return (
-      <LayoutNavbar>
-        <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-16">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="flex flex-col items-center justify-center gap-4 py-20">
-              <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-              <p className="text-lg text-blue-800">Memuat persiapan berlayar...</p>
-            </div>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-16">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex flex-col items-center justify-center gap-4 py-20">
+            <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+            <p className="text-lg text-blue-800">Memuat persiapan berlayar...</p>
           </div>
-        </main>
-      </LayoutNavbar>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <LayoutNavbar>
-        <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-16">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
-                <h3 className="text-red-800 font-medium">{error}</h3>
-              </div>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-16">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <h3 className="text-red-800 font-medium">{error}</h3>
             </div>
-            <button
-              onClick={() => router.push('/checklist')}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-            >
-              Kembali ke Form
-            </button>
           </div>
-        </main>
-      </LayoutNavbar>
+          <button
+            onClick={() => router.push('/checklist')}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            Kembali ke Form
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
-      <LayoutNavbar>
-        <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-16">
-          <div className="max-w-4xl mx-auto space-y-8">
-            {/* Header */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <h1 className="text-2xl md:text-3xl font-bold text-blue-900">
-                  Persiapan Aman Berlayar
-                </h1>
-                <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium">
-                  ID Sesi: {sessionId}
-                </div>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-16">
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold text-blue-900">
+              Persiapan Aman Berlayar
+            </h1>
+          </div>
+          <div className="text-gray-700">
+            {getTripDescription()}
+          </div>
+        </div>
+
+        {/* Progress Section */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <h2 className="text-xl font-semibold text-blue-900 mb-6">
+            Progress Persiapan
+          </h2>
+          
+          <div className="space-y-6">
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium text-blue-900">
+                  {progress.completion_percentage}% Selesai
+                </span>
+                <span className="text-sm font-medium text-gray-600">
+                  {progress.completed_items}/{progress.total_items} item
+                </span>
               </div>
-              <div className="text-gray-700">
-                {getTripDescription()}
+              
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-blue-700 h-3 rounded-full transition-all duration-500 ease-out" 
+                  style={{ width: `${progress.completion_percentage}%` }}
+                ></div>
               </div>
             </div>
-
-            {/* Progress Section */}
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-              <h2 className="text-xl font-semibold text-blue-900 mb-6">
-                Progress Persiapan
-              </h2>
-              
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium text-blue-900">
-                      {progress.completion_percentage}% Selesai
+            
+            {progress.mandatory_items > 0 && (
+              <div className={`p-4 rounded-lg ${
+                progress.completed_mandatory < progress.mandatory_items 
+                  ? 'bg-red-50 border border-red-200' 
+                  : 'bg-green-50 border border-green-200'
+              }`}>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-800">
+                      Item Wajib
                     </span>
-                    <span className="text-sm font-medium text-gray-600">
-                      {progress.completed_items}/{progress.total_items} item
+                    <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
+                      {progress.completed_mandatory}/{progress.mandatory_items}
                     </span>
                   </div>
-                  
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                    <div 
-                      className="bg-gradient-to-r from-blue-500 to-blue-700 h-3 rounded-full transition-all duration-500 ease-out" 
-                      style={{ width: `${progress.completion_percentage}%` }}
-                    ></div>
-                  </div>
+                  {progress.completed_mandatory < progress.mandatory_items ? (
+                    <span className="text-sm font-medium text-red-600 flex items-center gap-1">
+                      <AlertTriangle className="w-4 h-4" />
+                      Lengkapi item wajib!
+                    </span>
+                  ) : (
+                    <span className="text-sm font-medium text-green-600 flex items-center gap-1">
+                      <Check className="w-4 h-4" />
+                      Semua item wajib selesai
+                    </span>
+                  )}
                 </div>
-                
-                {progress.mandatory_items > 0 && (
-                  <div className={`p-4 rounded-lg ${
-                    progress.completed_mandatory < progress.mandatory_items 
-                      ? 'bg-red-50 border border-red-200' 
-                      : 'bg-green-50 border border-green-200'
-                  }`}>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-800">
-                          Item Wajib
-                        </span>
-                        <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
-                          {progress.completed_mandatory}/{progress.mandatory_items}
-                        </span>
-                      </div>
-                      {progress.completed_mandatory < progress.mandatory_items ? (
-                        <span className="text-sm font-medium text-red-600 flex items-center gap-1">
-                          <AlertTriangle className="w-4 h-4" />
-                          Lengkapi item wajib!
-                        </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Checklist Section */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-semibold text-blue-900">
+            Checklist Persiapan
+          </h2>
+          
+          {checklist.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-100">
+              <div className="flex flex-col items-center justify-center gap-3 text-gray-500">
+                <Info className="w-8 h-8" />
+                <p>Tidak ada item checklist yang perlu dipersiapkan</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {checklist.map((item) => (
+                <div
+                  key={item.id}
+                  className={`bg-white rounded-xl shadow-sm p-5 border-l-4 transition-all ${
+                    item.is_mandatory ? 'border-red-500' : 'border-blue-400'
+                  } ${item.is_completed ? 'opacity-90' : ''} hover:shadow-md`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200">
+                      {item.image_url ? (
+                        <Image
+                          src={item.image_url}
+                          alt={item.title}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
                       ) : (
-                        <span className="text-sm font-medium text-green-600 flex items-center gap-1">
-                          <Check className="w-4 h-4" />
-                          Semua item wajib selesai
-                        </span>
+                        <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                          <Info className="w-6 h-6 text-gray-400" />
+                        </div>
                       )}
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Checklist Section */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-blue-900">
-                Checklist Persiapan
-              </h2>
-              
-              {checklist.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-100">
-                  <div className="flex flex-col items-center justify-center gap-3 text-gray-500">
-                    <Info className="w-8 h-8" />
-                    <p>Tidak ada item checklist yang perlu dipersiapkan</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {checklist.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`bg-white rounded-xl shadow-sm p-5 border-l-4 transition-all ${
-                        item.is_mandatory ? 'border-red-500' : 'border-blue-400'
-                      } ${item.is_completed ? 'opacity-90' : ''} hover:shadow-md`}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200">
-                          {item.image_url ? (
-                            <Image
-                              src={item.image_url}
-                              alt={item.title}
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-50 flex items-center justify-center">
-                              <Info className="w-6 h-6 text-gray-400" />
-                            </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <h3 className="font-bold text-blue-900 truncate">
+                          {item.title}
+                          {item.is_mandatory && (
+                            <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
+                              WAJIB
+                            </span>
+                          )}
+                        </h3>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex-shrink-0">
+                          {item.category}
+                        </span>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">{item.description}</p>
+                      
+                      <div className="flex flex-wrap justify-between items-center mt-4 gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs bg-gray-100 text-gray-800 px-3 py-1 rounded-full">
+                            {item.estimated_time_minutes} menit
+                          </span>
+                          {item.priority > 0 && (
+                            <span className="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+                              Prioritas {item.priority}
+                            </span>
                           )}
                         </div>
                         
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                            <h3 className="font-bold text-blue-900 truncate">
-                              {item.title}
-                              {item.is_mandatory && (
-                                <span className="ml-2 text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
-                                  WAJIB
-                                </span>
-                              )}
-                            </h3>
-                            <span className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex-shrink-0">
-                              {item.category}
-                            </span>
-                          </div>
-                          
-                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{item.description}</p>
-                          
-                          <div className="flex flex-wrap justify-between items-center mt-4 gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs bg-gray-100 text-gray-800 px-3 py-1 rounded-full">
-                                {item.estimated_time_minutes} menit
-                              </span>
-                              {item.priority > 0 && (
-                                <span className="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
-                                  Prioritas {item.priority}
-                                </span>
-                              )}
-                            </div>
-                            
-                            <button 
-                              onClick={() => handleCheckItem(item.id, !item.is_completed)}
-                              disabled={currentlyUpdating === item.id}
-                              className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-colors ${
-                                item.is_completed 
-                                  ? "bg-green-100 text-green-800 hover:bg-green-200" 
-                                  : "bg-blue-600 text-white hover:bg-blue-700"
-                              }`}
-                            >
-                              {currentlyUpdating === item.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : item.is_completed ? (
-                                <>
-                                  <Check className="w-4 h-4" /> Selesai
-                                </>
-                              ) : (
-                                "Tandai Selesai"
-                              )}
-                            </button>
-                          </div>
-                        </div>
+                        <button 
+                          onClick={() => handleCheckItem(item.id, !item.is_completed)}
+                          disabled={currentlyUpdating === item.id}
+                          className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm transition-colors ${
+                            item.is_completed 
+                              ? "bg-green-100 text-green-800 hover:bg-green-200" 
+                              : "bg-blue-600 text-white hover:bg-blue-700"
+                          }`}
+                        >
+                          {currentlyUpdating === item.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : item.is_completed ? (
+                            <>
+                              <Check className="w-4 h-4" /> Selesai
+                            </>
+                          ) : (
+                            "Tandai Selesai"
+                          )}
+                        </button>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
+          )}
+        </div>
 
-            {/* Navigation */}
-            <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 pt-8">
-              <button
-                onClick={() => router.push('/checklist')}
-                className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
-              >
-                ← Kembali ke Form
-              </button>
-              
-              <button 
-                onClick={() => router.push(`/checklist/hasil-panduan/summary?sessionId=${sessionId}`)}
-                className={`px-6 py-3 rounded-lg flex items-center gap-2 transition-all ${
-                  progress.completed_items < progress.total_items
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
-                }`}
-                disabled={progress.completed_items < progress.total_items}
-              >
+        {/* Navigation */}
+        <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 pt-8">
+          <button
+            onClick={() => router.push('/checklist')}
+            className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
+          >
+            ← Kembali ke Form
+          </button>
+          
+          <button 
+            onClick={handleNavigateToSummary}
+            disabled={progress.completed_items < progress.total_items || isLoading}
+            className={`px-6 py-3 rounded-lg flex items-center gap-2 transition-all ${
+              progress.completed_items < progress.total_items
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-[#053040] hover:bg-[#2C5B6B] text-white shadow-md'
+            }`}
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
                 <span>Lanjut ke Rangkuman</span>
                 <ChevronRight className="w-5 h-5" />
-              </button>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function HasilPanduanPage() {
+  return (
+    <>
+      <LayoutNavbar>
+        <Suspense fallback={
+          <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white px-4 py-16">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="flex flex-col items-center justify-center gap-4 py-20">
+                <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+                <p className="text-lg text-blue-800">Memuat halaman...</p>
+              </div>
             </div>
           </div>
-        </main>
+        }>
+          <HasilPanduanContent />
+        </Suspense>
       </LayoutNavbar>
       <Footer />
     </>

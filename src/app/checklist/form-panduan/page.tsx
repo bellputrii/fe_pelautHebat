@@ -5,6 +5,9 @@ import LayoutNavbar from '@/components/LayoutNavbar'
 import Footer from '@/components/Footer'
 import { useRouter } from 'next/navigation'
 import { auth } from "@/firebase/config";
+import { useTokenRefresh } from '@/app/hooks/useAuth'
+import { authFetch } from '@/app/lib/api'
+import { Waves, AlertTriangle, Loader2, ChevronRight } from 'lucide-react'
 
 type FormData = {
   tujuan: string;
@@ -53,6 +56,9 @@ export default function InformasiBerlayarPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize token refresh mechanism
+  useTokenRefresh();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -125,23 +131,17 @@ export default function InformasiBerlayarPage() {
         return;
       }
 
-      const idToken = await currentUser.getIdToken();
       const apiData = mapFormToAPI(form);
 
-      const myHeaders = new Headers();
-      myHeaders.append("Content-Type", "application/json");
-      myHeaders.append("Authorization", `Bearer ${idToken}`);
-
-      const raw = JSON.stringify(apiData);
-
       // Step 1: Start the session
-      const sessionResponse = await fetch(
+      const sessionResponse = await authFetch(
         `${process.env.NEXT_PUBLIC_API_URL}/guide/session/start`,
         {
           method: "POST",
-          headers: myHeaders,
-          body: raw,
-          redirect: "follow"
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(apiData)
         }
       );
 
@@ -154,15 +154,10 @@ export default function InformasiBerlayarPage() {
       const session: GuideSession = sessionResult.data;
 
       // Step 2: Generate the checklist
-      const checklistHeaders = new Headers();
-      checklistHeaders.append("Authorization", `Bearer ${idToken}`);
-
-      const checklistResponse = await fetch(
+      const checklistResponse = await authFetch(
         `${process.env.NEXT_PUBLIC_API_URL}/guide/session/${session.id}/checklist`,
         {
-          method: "POST",
-          headers: checklistHeaders,
-          redirect: "follow"
+          method: "POST"
         }
       );
 
@@ -186,211 +181,245 @@ export default function InformasiBerlayarPage() {
   return (
     <>
       <LayoutNavbar>
-        <main className="bg-[#dcebea] min-h-screen py-16 px-4 flex flex-col items-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-[#053040] mb-10 text-center">
-            Masukkan Informasi Berlayar Anda
-          </h1>
-
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 w-full max-w-xl">
-              {error}
-            </div>
-          )}
-
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white rounded-xl shadow-md px-6 py-8 w-full max-w-xl space-y-6"
-          >
-            {/* Tujuan */}
-            <div>
-              <label className="font-semibold block mb-1">Apa Tujuan Perjalananmu?</label>
-              <select
-                name="tujuan"
-                value={form.tujuan}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-                required
-              >
-                <option value="">Pilih tujuan</option>
-                <option value="memancing">Memancing</option>
-                <option value="pengiriman">Pengiriman Barang</option>
-                <option value="wisata">Wisata</option>
-                <option value="darurat">Situasi Darurat</option>
-              </select>
+        <main className="min-h-screen pt-20 p-8 bg-white max-w-7xl mx-auto">
+          <div className="container mx-auto px-4 py-12 max-w-3xl">
+            {/* Header Section */}
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center justify-center bg-blue-100 p-3 rounded-full mb-4">
+                <Waves className="w-6 h-6 text-blue-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-blue-900 mb-3">
+                Persiapan Berlayar
+              </h1>
+              <p className="text-gray-600 max-w-lg mx-auto">
+                Isi informasi perjalanan Anda untuk mendapatkan panduan keselamatan yang disesuaikan
+              </p>
             </div>
 
-            {/* Durasi */}
-            <div>
-              <label className="font-semibold block mb-1">
-                Berapa Lama Anda Berlayar? (pulang-pergi)
-              </label>
-              <p className="text-sm text-gray-500 mb-1">Diisi dengan satuan menit (minimal 30 menit)</p>
-              <input
-                type="number"
-                name="durasi"
-                value={form.durasi}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-                placeholder="60"
-                min="30"
-                max="1440"
-                required
-              />
-            </div>
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-8 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-medium text-red-800">Perhatian</h3>
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            )}
 
-            {/* Penumpang */}
-            <div>
-              <label className="font-semibold block mb-1">
-                Ada Berapa Penumpang Di Kapal Anda?
-              </label>
-              <p className="text-sm text-gray-500 mb-1">Termasuk operator kapal</p>
-              <input
-                type="number"
-                name="penumpang"
-                value={form.penumpang}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-                placeholder="2"
-                min="1"
-                max="100"
-                required
-              />
-            </div>
+            {/* Form Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                {/* Grid Layout for Form Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Tujuan */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Tujuan Perjalanan
+                    </label>
+                    <select
+                      name="tujuan"
+                      value={form.tujuan}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="">Pilih tujuan</option>
+                      <option value="memancing">Memancing</option>
+                      <option value="pengiriman">Pengiriman Barang</option>
+                      <option value="wisata">Wisata</option>
+                      <option value="darurat">Situasi Darurat</option>
+                    </select>
+                  </div>
 
-            {/* Jenis Perahu */}
-            <div>
-              <label className="font-semibold block mb-1">
-                Apa Jenis Perahu yang Anda Gunakan?
-              </label>
-              <select
-                name="jenisPerahu"
-                value={form.jenisPerahu}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-                required
-              >
-                <option value="">Pilih jenis perahu</option>
-                <option value="perahu_motor">Perahu Motor Kecil</option>
-                <option value="kapal_layar">Kapal Layar/Nelayan</option>
-                <option value="sampan">Sampan</option>
-                <option value="kapal_besar">Kapal Besar</option>
-              </select>
-            </div>
+                  {/* Jenis Perahu */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Jenis Perahu
+                    </label>
+                    <select
+                      name="jenisPerahu"
+                      value={form.jenisPerahu}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="">Pilih jenis perahu</option>
+                      <option value="perahu_motor">Perahu Motor Kecil</option>
+                      <option value="kapal_layar">Kapal Layar/Nelayan</option>
+                      <option value="sampan">Sampan</option>
+                      <option value="kapal_besar">Kapal Besar</option>
+                    </select>
+                  </div>
 
-            {/* Lokasi Keberangkatan */}
-            <div>
-              <label className="font-semibold block mb-1">
-                Lokasi Keberangkatan
-              </label>
-              <input
-                type="text"
-                name="lokasiKeberangkatan"
-                value={form.lokasiKeberangkatan}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-                placeholder="Pelabuhan Muara Angke"
-                required
-              />
-            </div>
+                  {/* Durasi */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Durasi Perjalanan (menit)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="durasi"
+                        value={form.durasi}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="60"
+                        min="30"
+                        max="1440"
+                        required
+                      />
+                      <span className="absolute right-3 top-2.5 text-gray-400 text-sm">min</span>
+                    </div>
+                  </div>
 
-            {/* Lokasi Tujuan */}
-            <div>
-              <label className="font-semibold block mb-1">
-                Lokasi Tujuan
-              </label>
-              <input
-                type="text"
-                name="lokasiTujuan"
-                value={form.lokasiTujuan}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-                placeholder="Kepulauan Seribu"
-                required
-              />
-            </div>
+                  {/* Penumpang */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Jumlah Penumpang
+                    </label>
+                    <input
+                      type="number"
+                      name="penumpang"
+                      value={form.penumpang}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="2"
+                      min="1"
+                      max="100"
+                      required
+                    />
+                  </div>
 
-            {/* Waktu Keberangkatan */}
-            <div>
-              <label className="font-semibold block mb-1">
-                Waktu Keberangkatan
-              </label>
-              <input
-                type="datetime-local"
-                name="waktuKeberangkatan"
-                value={form.waktuKeberangkatan}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-                required
-              />
-            </div>
+                  {/* Lokasi Keberangkatan */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Lokasi Keberangkatan
+                    </label>
+                    <input
+                      type="text"
+                      name="lokasiKeberangkatan"
+                      value={form.lokasiKeberangkatan}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Pelabuhan Muara Angke"
+                      required
+                    />
+                  </div>
 
-            {/* Kondisi Cuaca */}
-            <div>
-              <label className="font-semibold block mb-1">
-                Kondisi Cuaca Saat Ini
-              </label>
-              <select
-                name="kondisiCuaca"
-                value={form.kondisiCuaca}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-                required
-              >
-                <option value="">Pilih kondisi cuaca</option>
-                <option value="calm">Tenang (gelombang kecil)</option>
-                <option value="moderate">Sedang (gelombang sedang)</option>
-                <option value="rough">Buruk (gelombang besar)</option>
-              </select>
-            </div>
+                  {/* Lokasi Tujuan */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Lokasi Tujuan
+                    </label>
+                    <input
+                      type="text"
+                      name="lokasiTujuan"
+                      value={form.lokasiTujuan}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Kepulauan Seribu"
+                      required
+                    />
+                  </div>
 
-            {/* Tingkat Urgensi */}
-            <div>
-              <label className="font-semibold block mb-1">
-                Tingkat Urgensi
-              </label>
-              <select
-                name="tingkatUrgensi"
-                value={form.tingkatUrgensi}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="normal">Normal</option>
-                <option value="urgent">Penting</option>
-                <option value="critical">Kritis</option>
-              </select>
-            </div>
+                  {/* Waktu Keberangkatan */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Waktu Keberangkatan
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="waktuKeberangkatan"
+                      value={form.waktuKeberangkatan}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
 
-            {/* Jarak */}
-            <div>
-              <label className="font-semibold block mb-1">
-                Jarak Tempuh Perjalanan (km)
-              </label>
-              <p className="text-sm text-gray-500 mb-1">Total jarak pulang-pergi</p>
-              <input
-                type="number"
-                name="jarak"
-                value={form.jarak}
-                onChange={handleChange}
-                className="w-full border rounded px-3 py-2"
-                placeholder="15.5"
-                step="0.1"
-                min="0.1"
-                max="1000"
-                required
-              />
-            </div>
+                  {/* Kondisi Cuaca */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Kondisi Cuaca
+                    </label>
+                    <select
+                      name="kondisiCuaca"
+                      value={form.kondisiCuaca}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="">Pilih kondisi cuaca</option>
+                      <option value="calm">Tenang (gelombang kecil)</option>
+                      <option value="moderate">Sedang (gelombang sedang)</option>
+                      <option value="rough">Buruk (gelombang besar)</option>
+                    </select>
+                  </div>
 
-            {/* Submit */}
-            <div className="pt-4 text-center">
-              <button
-                type="submit"
-                className="bg-[#053040] text-white px-6 py-2 rounded hover:bg-[#07475f] transition disabled:opacity-50"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Memproses...' : 'Buat Persiapan'}
-              </button>
+                  {/* Tingkat Urgensi */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Tingkat Urgensi
+                    </label>
+                    <select
+                      name="tingkatUrgensi"
+                      value={form.tingkatUrgensi}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="normal">Normal</option>
+                      <option value="urgent">Penting</option>
+                      <option value="critical">Kritis</option>
+                    </select>
+                  </div>
+
+                  {/* Jarak */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Jarak Tempuh (km)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        name="jarak"
+                        value={form.jarak}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="15.5"
+                        step="0.1"
+                        min="0.1"
+                        max="1000"
+                        required
+                      />
+                      <span className="absolute right-3 top-2.5 text-gray-400 text-sm">km</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-[#053040] hover:bg-[#2C5B6B]  text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        Lanjutkan
+                        <ChevronRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         </main>
       </LayoutNavbar>
       <Footer />

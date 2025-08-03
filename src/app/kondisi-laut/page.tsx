@@ -7,6 +7,8 @@ import { auth } from "@/firebase/config";
 import { useRouter } from 'next/navigation';
 import LayoutNavbar from '@/components/LayoutNavbar';
 import Footer from '@/components/Footer';
+import { useTokenRefresh } from '@/app/hooks/useAuth';
+import { authFetch } from '@/app/lib/api';
 
 const LeafletMap = dynamic(
   () => import('@/components/LeafLetMap').then((mod) => mod.default),
@@ -107,25 +109,18 @@ export default function KondisiLautPage() {
   const [mapReady, setMapReady] = useState(false);
   const router = useRouter();
 
+  // Initialize token refresh mechanism
+  useTokenRefresh();
+
   const fetchConditions = async () => {
     setLoading(prev => ({...prev, conditions: true}));
     setAuthError('');
 
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        setAuthError("Anda perlu login terlebih dahulu.");
-        setLoading(prev => ({...prev, conditions: false}));
-        return;
-      }
-
-      const idToken = await currentUser.getIdToken();
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/explain-conditions`, {
+      const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/explain-conditions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           latitude: location.lat,
@@ -133,8 +128,12 @@ export default function KondisiLautPage() {
         })
       });
 
-      if (response.status === 401) {
-        setAuthError('Sesi Anda telah habis, silakan login kembali');
+      if (!response.ok) {
+        if (response.status === 401) {
+          setAuthError('Sesi Anda telah habis, silakan login kembali');
+        } else {
+          throw new Error('Gagal memuat data kondisi');
+        }
         return;
       }
 
@@ -146,7 +145,9 @@ export default function KondisiLautPage() {
       }
     } catch (error) {
       console.error('Error fetching conditions:', error);
-      setAuthError('Terjadi kesalahan saat menghubungi server');
+      if (error instanceof Error) {
+        setAuthError(error.message || 'Terjadi kesalahan saat menghubungi server');
+      }
     } finally {
       setLoading(prev => ({...prev, conditions: false}));
     }
@@ -157,20 +158,10 @@ export default function KondisiLautPage() {
     setAuthError('');
 
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        setAuthError("Anda perlu login terlebih dahulu.");
-        setLoading(prev => ({...prev, anomalies: false}));
-        return;
-      }
-
-      const idToken = await currentUser.getIdToken();
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/detect-anomalies`, {
+      const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/detect-anomalies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           latitude: location.lat,
@@ -178,8 +169,12 @@ export default function KondisiLautPage() {
         })
       });
 
-      if (response.status === 401) {
-        setAuthError('Sesi Anda telah habis, silakan login kembali');
+      if (!response.ok) {
+        if (response.status === 401) {
+          setAuthError('Sesi Anda telah habis, silakan login kembali');
+        } else {
+          throw new Error('Gagal memuat data anomali');
+        }
         return;
       }
 
@@ -191,7 +186,9 @@ export default function KondisiLautPage() {
       }
     } catch (error) {
       console.error('Error fetching anomalies:', error);
-      setAuthError('Terjadi kesalahan saat menghubungi server');
+      if (error instanceof Error) {
+        setAuthError(error.message || 'Terjadi kesalahan saat menghubungi server');
+      }
     } finally {
       setLoading(prev => ({...prev, anomalies: false}));
     }
@@ -320,8 +317,8 @@ export default function KondisiLautPage() {
                   </h2>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-[#5c7893]">Keamanan</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSafetyColor(conditionData.ai_explanation.safety_level)}`}>
+                      <span className="text-sm font-medium text-[#5c7893]">Tingkat Keamanan</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getSafetyColor(conditionData.ai_explanation.safety_level)}`}>
                         {conditionData.ai_explanation.safety_level}
                       </span>
                     </div>
@@ -330,25 +327,28 @@ export default function KondisiLautPage() {
                       <div className="bg-[#eaf9fd] p-2 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Waves size={14} className="text-[#00698f]" />
-                          <span className="text-xs text-[#5c7893]">Gelombang</span>
+                          <span className="text-xs text-[#5c7893]">Tinggi Gelombang</span>
                         </div>
-                        <p className="font-medium text-[#053040] text-sm">
+                        <p className="font-bold text-[#053040] text-sm mt-1">
                           {conditionData.weather_data.hourly.wave_height[0]} {conditionData.weather_data.units.wave_height}
                         </p>
                       </div>
                       <div className="bg-[#eaf9fd] p-2 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Wind size={14} className="text-[#00698f]" />
-                          <span className="text-xs text-[#5c7893]">Arah</span>
+                          <span className="text-xs text-[#5c7893]">Arah Gelombang</span>
                         </div>
-                        <p className="font-medium text-[#053040] text-sm">
+                        <p className="font-bold text-[#053040] text-sm mt-1">
                           {conditionData.weather_data.hourly.wave_direction[0]}°
                         </p>
                       </div>
                     </div>
                     
                     <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-sm text-blue-800">
+                      <h3 className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-1">
+                        Rekomendasi AI
+                      </h3>
+                      <p className="text-sm text-blue-800 font-medium">
                         {conditionData.ai_explanation.simple_advice}
                       </p>
                     </div>
@@ -378,16 +378,20 @@ export default function KondisiLautPage() {
                     <h2 className="text-lg font-semibold text-[#053040]">Kondisi Laut Saat Ini</h2>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-sm font-medium text-[#053040] mb-2">Penjelasan Kondisi</h3>
-                      <p className="text-sm text-gray-700 leading-relaxed">
+                      <h3 className="text-base font-bold text-[#053040] mb-3 border-b border-gray-200 pb-2">
+                        Penjelasan Kondisi
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed">
                         {conditionData.ai_explanation.explanation}
                       </p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-[#053040] mb-2">Konteks Lokal</h3>
-                      <p className="text-sm text-gray-700 leading-relaxed">
+                      <h3 className="text-base font-bold text-[#053040] mb-3 border-b border-gray-200 pb-2">
+                        Konteks Lokal
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed">
                         {conditionData.ai_explanation.local_context}
                       </p>
                     </div>
@@ -398,9 +402,11 @@ export default function KondisiLautPage() {
               {/* Technical Summary */}
               {conditionData && (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-                  <h3 className="text-sm font-medium text-[#053040] mb-2">Ringkasan Teknis</h3>
-                  <div className="bg-[#f8fafc] p-3 rounded-lg">
-                    <p className="text-sm text-gray-700">
+                  <h3 className="text-base font-bold text-[#053040] mb-3 border-b border-gray-200 pb-2">
+                    Ringkasan Teknis
+                  </h3>
+                  <div className="bg-[#f8fafc] p-4 rounded-lg border border-gray-100">
+                    <p className="text-gray-700">
                       {conditionData.ai_explanation.technical_summary}
                     </p>
                   </div>
@@ -423,23 +429,37 @@ export default function KondisiLautPage() {
                     </h2>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-sm font-medium text-[#053040] mb-2">Prediksi</h3>
-                      <div className="bg-[#f8fafc] p-3 rounded-lg">
-                        <p className="text-sm font-medium text-[#053040]">
+                      <h3 className="text-base font-bold text-[#053040] mb-3 border-b border-gray-200 pb-2">
+                        Prediksi
+                      </h3>
+                      <div className="bg-[#f8fafc] p-4 rounded-lg border border-gray-100">
+                        <p className="text-lg font-bold text-[#053040] mb-2">
                           {anomalyData.anomaly_analysis.prediction.event_type}
                         </p>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <span className="text-xs text-[#5c7893]">Probabilitas:</span>
-                            <p className="text-sm font-medium text-[#053040]">
+                            <h4 className="text-xs font-bold text-[#5c7893] uppercase tracking-wide">
+                              Probabilitas
+                            </h4>
+                            <p className="text-sm font-bold text-[#053040] mt-1">
                               {anomalyData.anomaly_analysis.prediction.probability}
                             </p>
                           </div>
                           <div>
-                            <span className="text-xs text-[#5c7893]">Area Dampak:</span>
-                            <p className="text-sm font-medium text-[#053040]">
+                            <h4 className="text-xs font-bold text-[#5c7893] uppercase tracking-wide">
+                              Estimasi Waktu
+                            </h4>
+                            <p className="text-sm font-bold text-[#053040] mt-1">
+                              {anomalyData.anomaly_analysis.prediction.estimated_time}
+                            </p>
+                          </div>
+                          <div className="col-span-2">
+                            <h4 className="text-xs font-bold text-[#5c7893] uppercase tracking-wide">
+                              Area Dampak
+                            </h4>
+                            <p className="text-sm font-bold text-[#053040] mt-1">
                               {anomalyData.anomaly_analysis.prediction.impact_area}
                             </p>
                           </div>
@@ -448,11 +468,16 @@ export default function KondisiLautPage() {
                     </div>
                     
                     <div>
-                      <h3 className="text-sm font-medium text-[#053040] mb-2">Rekomendasi</h3>
-                      <div className="bg-[#f8fafc] p-3 rounded-lg">
-                        <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                      <h3 className="text-base font-bold text-[#053040] mb-3 border-b border-gray-200 pb-2">
+                        Rekomendasi
+                      </h3>
+                      <div className="bg-[#f8fafc] p-4 rounded-lg border border-gray-100">
+                        <ul className="space-y-3">
                           {anomalyData.anomaly_analysis.recommendations.map((rec, i) => (
-                            <li key={i}>{rec}</li>
+                            <li key={i} className="flex items-start">
+                              <span className="text-blue-500 font-bold mr-2">•</span>
+                              <p className="text-gray-700 font-medium">{rec}</p>
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -460,12 +485,17 @@ export default function KondisiLautPage() {
                   </div>
                   
                   {anomalyData.anomaly_analysis.detected_anomalies.length > 0 && (
-                    <div className="mt-4">
-                      <h3 className="text-sm font-medium text-[#053040] mb-2">Anomali Terdeteksi</h3>
-                      <div className="bg-red-50 border border-red-100 p-3 rounded-lg">
-                        <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                    <div className="mt-6">
+                      <h3 className="text-base font-bold text-[#053040] mb-3 border-b border-gray-200 pb-2">
+                        Anomali Terdeteksi
+                      </h3>
+                      <div className="bg-red-50 border border-red-100 p-4 rounded-lg">
+                        <ul className="space-y-2">
                           {anomalyData.anomaly_analysis.detected_anomalies.map((anomaly, i) => (
-                            <li key={i}>{anomaly.description}</li>
+                            <li key={i} className="flex items-start">
+                              <span className="text-red-500 font-bold mr-2">•</span>
+                              <p className="text-red-700 font-medium">{anomaly.description}</p>
+                            </li>
                           ))}
                         </ul>
                       </div>

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { AlertTriangle, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { AlertTriangle, ChevronLeft, ChevronRight, Plus, ArrowLeft } from 'lucide-react';
 import LayoutNavbar from '@/components/LayoutNavbar';
 import Footer from '@/components/Footer';
-import { auth } from '@/firebase/config';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { useTokenRefresh } from '@/app/hooks/useAuth';
+import { authFetch } from '@/app/lib/api';
 
 type Report = {
   id: string;
@@ -18,9 +19,10 @@ type Report = {
   };
 };
 
-export default function CommunityReportsPage() {
+function CommunityReportsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   
   const communityId = searchParams.get('communityId');
   const communityName = searchParams.get('communityName');
@@ -32,31 +34,19 @@ export default function CommunityReportsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
 
+  useTokenRefresh();
+
   const fetchReports = async () => {
     setLoading(true);
     setError('');
 
     try {
-      const user = auth.currentUser;
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-
       if (!communityId) {
         throw new Error('Komunitas tidak valid');
       }
 
-      const idToken = await user.getIdToken();
-      
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/report/search?community_id=${communityId}&limit=${limit}&page=${currentPage}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${idToken}`,
-          },
-        }
+      const response = await authFetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/report/search?community_id=${communityId}&limit=${limit}&page=${currentPage}`
       );
 
       if (!response.ok) {
@@ -72,7 +62,13 @@ export default function CommunityReportsPage() {
         setError(data.message || 'Gagal memuat laporan');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
+      if (err instanceof Error) {
+        if (err.message.includes('401')) {
+          setError('Sesi Anda telah habis, silakan login kembali');
+        } else {
+          setError(err.message || 'Terjadi kesalahan');
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -81,6 +77,8 @@ export default function CommunityReportsPage() {
   useEffect(() => {
     if (communityId) {
       fetchReports();
+    } else {
+      router.push('/peta-komunitas');
     }
   }, [communityId, currentPage]);
 
@@ -102,10 +100,19 @@ export default function CommunityReportsPage() {
 
   const getSafetyColor = (safetyLevel: string) => {
     switch (safetyLevel) {
-      case 'safe': return 'text-green-600';
-      case 'caution': return 'text-yellow-600';
-      case 'danger': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'safe': return 'bg-green-100 text-green-800';
+      case 'caution': return 'bg-yellow-100 text-yellow-800';
+      case 'danger': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getSafetyIcon = (safetyLevel: string) => {
+    switch (safetyLevel) {
+      case 'safe': return '🟢';
+      case 'caution': return '🟡';
+      case 'danger': return '🔴';
+      default: return '⚪';
     }
   };
 
@@ -137,15 +144,26 @@ export default function CommunityReportsPage() {
           <div className="max-w-2xl mx-auto p-4">
             <div className="mb-6 sticky top-16 bg-white py-4 z-10">
               <div className="flex items-center justify-between">
-                <h1 className="text-xl font-bold text-gray-800">{decodeURIComponent(communityName || '')}</h1>
+                <button
+                  onClick={() => router.push('/peta-komunitas')}
+                  className="flex items-center gap-2 text-[#053040] hover:text-[#2C5B6B]"
+                >
+                  <ArrowLeft size={18} />
+                  <span>Semua Komunitas</span>
+                </button>
+                
                 <Link 
                   href={`/peta-komunitas/form-report?communityId=${communityId}&communityName=${communityName}`}
-                  className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  className="bg-[#053040] hover:bg-[#2C5B6B] text-white shadow-md flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
                 >
                   <Plus size={18} />
                   Buat Laporan
                 </Link>
               </div>
+              
+              <h1 className="text-xl font-bold text-gray-800 mt-4">
+                {decodeURIComponent(communityName || '')}
+              </h1>
             </div>
 
             {loading ? (
@@ -153,35 +171,45 @@ export default function CommunityReportsPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
               </div>
             ) : reports.length === 0 ? (
-              <div className="bg-gray-50 p-6 rounded-lg text-center">
-                <p className="text-gray-500">Belum ada laporan untuk komunitas ini</p>
+              <div className="bg-gray-50 p-8 rounded-xl text-center border border-gray-200">
+                <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-800">Belum ada laporan</h3>
+                <p className="text-gray-500 mt-2">
+                  Jadilah yang pertama membagikan laporan di komunitas ini
+                </p>
               </div>
             ) : (
               <div className="space-y-6">
                 {reports.map((report) => (
                   <div 
                     key={report.id} 
-                    className="border-b border-gray-200 pb-6 last:border-0 last:pb-0"
+                    className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="bg-gray-200 rounded-full w-10 h-10 flex-shrink-0 flex items-center justify-center text-gray-600 font-bold">
-                        {report.author_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h2 className="font-semibold text-gray-800">{report.author_name}</h2>
-                          <span className="text-xs text-gray-500">•</span>
-                          <span className="text-xs text-gray-500">{formatTimeAgo(report.created_at)}</span>
+                    <div className="p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-gray-200 rounded-full w-10 h-10 flex-shrink-0 flex items-center justify-center text-gray-600 font-bold">
+                          {report.author_name.charAt(0).toUpperCase()}
                         </div>
                         
-                        <p className="mt-2 text-gray-800 whitespace-pre-line">
-                          {report.description}
-                        </p>
-                        
-                        <div className="mt-3">
-                          <span className={`text-sm font-medium ${getSafetyColor(report.safety_assessment.overall_safety)}`}>
-                            Status: {report.safety_assessment.overall_safety.toUpperCase()}
-                          </span>
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h2 className="font-semibold text-gray-800">{report.author_name}</h2>
+                            <span className="text-xs text-gray-500">•</span>
+                            <span className="text-xs text-gray-500">{formatTimeAgo(report.created_at)}</span>
+                          </div>
+                          
+                          <p className="mt-3 text-gray-700 whitespace-pre-line">
+                            {report.description}
+                          </p>
+                          
+                          <div className="mt-4">
+                            <span className={`inline-flex items-center gap-2 text-sm px-3 py-1 rounded-full ${getSafetyColor(report.safety_assessment.overall_safety)}`}>
+                              <span>{getSafetyIcon(report.safety_assessment.overall_safety)}</span>
+                              Status: {report.safety_assessment.overall_safety === 'safe' ? 'Aman' : 
+                                      report.safety_assessment.overall_safety === 'caution' ? 'Waspada' : 
+                                      'Berbahaya'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -189,11 +217,11 @@ export default function CommunityReportsPage() {
                 ))}
 
                 {totalPages > 1 && (
-                  <div className="flex justify-between items-center mt-6">
+                  <div className="flex justify-between items-center mt-8">
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="flex items-center px-4 py-2 border rounded-md disabled:opacity-50"
+                      className="flex items-center px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50"
                     >
                       <ChevronLeft className="h-5 w-5 mr-1" />
                       Sebelumnya
@@ -204,7 +232,7 @@ export default function CommunityReportsPage() {
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className="flex items-center px-4 py-2 border rounded-md disabled:opacity-50"
+                      className="flex items-center px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50"
                     >
                       Selanjutnya
                       <ChevronRight className="h-5 w-5 ml-1" />
@@ -218,5 +246,23 @@ export default function CommunityReportsPage() {
       </LayoutNavbar>
       <Footer />
     </>
+  );
+}
+
+export default function CommunityReportsPage() {
+  return (
+    <Suspense fallback={
+      <LayoutNavbar>
+        <div className="min-h-screen pt-20 bg-white">
+          <div className="max-w-2xl mx-auto p-4">
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          </div>
+        </div>
+      </LayoutNavbar>
+    }>
+      <CommunityReportsContent />
+    </Suspense>
   );
 }
