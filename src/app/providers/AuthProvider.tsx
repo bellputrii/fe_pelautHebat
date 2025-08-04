@@ -26,9 +26,9 @@ export default function AuthProvider({
         localStorage.setItem('idToken', token);
         setIsAuthenticated(true);
         
-        // Jika di halaman auth tapi sudah login, redirect ke dashboard
+        // Jika di halaman auth tapi sudah login, redirect ke beranda
         if (window.location.pathname.startsWith('/auth')) {
-          router.push('/dashboard');
+          router.push('/beranda');
         }
       } else {
         // User is not logged in
