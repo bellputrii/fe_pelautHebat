@@ -99,6 +99,18 @@ export default function Footer() {
           </div>
         </div>
 
+        {/* Disclaimer Section */}
+        <div className="mt-10 p-4 bg-[#0a3a4d] rounded-lg border border-[#2C5B6B]">
+          <h4 className="font-medium text-[#C9CFCF] mb-2 text-center">Disclaimer Hak Cipta</h4>
+          <p className="text-xs text-[#a0aec0] text-center leading-relaxed">
+            Kami tidak berniat untuk menyebarluaskan atau memperjualbelikan konten apapun yang memiliki hak cipta. 
+            Semua materi seperti video, gambar, dan data lainnya yang mungkin ditampilkan bukan hasil produksi Kami, 
+            dan sepenuhnya merupakan hak milik pemilik aslinya. Website ini tidak menyimpan file video apapun 
+            di server pribadi, melainkan hanya menggunakan link atau embed dari pihak ketiga untuk simulasi teknis 
+            dan pemberian informasi.
+          </p>
+        </div>
+
         <div className="border-t border-[#2C5B6B] mt-8 pt-8 text-center text-sm text-[#C9CFCF]">
           <p>Dibangun dengan dedikasi untuk keselamatan pelayaran Indonesia</p>
         </div>
