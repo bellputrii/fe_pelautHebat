@@ -91,8 +91,8 @@ type AnomalyData = {
 
 export default function KondisiLautPage() {
   const [location, setLocation] = useState({
-    lat: -6.8,
-    lng: 106.8,
+    lat: -5.73,
+    lng: 132.56,
   });
   const [conditionData, setConditionData] = useState<ConditionData | null>(null);
   const [anomalyData, setAnomalyData] = useState<AnomalyData | null>(null);

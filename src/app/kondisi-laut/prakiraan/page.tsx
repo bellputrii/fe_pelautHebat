@@ -50,12 +50,12 @@ const BOAT_TYPES = [
 
 export default function PrakiraanPage() {
   const [location, setLocation] = useState({
-    lat: -6.8,
-    lng: 106.8,
+    lat: -5.73,
+    lng: 132.56,
   });
   const [manualInput, setManualInput] = useState({
-    lat: '-6.8',
-    lng: '106.8'
+    lat: '-5.73',
+    lng: '132.56',
   });
   const [recommendationData, setRecommendationData] = useState<RecommendationData | null>(null);
   const [loading, setLoading] = useState({
