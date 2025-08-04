@@ -80,7 +80,7 @@ export default function SignUpPage() {
 
       if (res.ok) {
         localStorage.setItem("token", data.token); // jika backend mengembalikan token
-        router.push("/dashboard"); // arahkan ke halaman setelah signup
+        router.push("/beranda"); // arahkan ke halaman setelah signup
       } else {
         alert(data?.message || "Registrasi dengan Google gagal.");
       }

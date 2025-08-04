@@ -48,7 +48,7 @@ export default function SignInPage() {
       
       setStatus("success");
       setMessage("Login berhasil!");
-      setTimeout(() => router.push("/dashboard"), 1000);
+      setTimeout(() => router.push("/beranda"), 1000);
     } catch (error: any) {
       setStatus("error");
       setMessage(error.message || "Terjadi kesalahan saat login");
@@ -78,7 +78,7 @@ export default function SignInPage() {
       if (res.ok) {
         setStatus("success");
         setMessage("Login dengan Google berhasil!");
-        setTimeout(() => router.push("/dashboard"), 1000);
+        setTimeout(() => router.push("/beranda"), 1000);
       } else {
         throw new Error(data?.message || "Login Google gagal.");
       }

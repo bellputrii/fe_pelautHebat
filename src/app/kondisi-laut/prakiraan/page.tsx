@@ -12,10 +12,28 @@ import { authFetch } from '@/app/lib/api';
 type ForecastData = {
   time: string;
   wave_height?: number;
+  wave_direction?: number;
+  wave_period?: number;
+  wind_wave_height?: number;
+  wind_wave_direction?: number;
+  wind_wave_period?: number;
+  swell_wave_height?: number;
+  swell_wave_direction?: number;
+  swell_wave_period?: number;
   wind_speed?: number;
   wind_direction?: number;
+  wind_gusts?: number;
   temperature?: number;
   pressure?: number;
+};
+
+type SafeWindow = {
+  start_time: string;
+  end_time: string;
+  confidence: string;
+  reason: string;
+  wave_condition: string;
+  wind_condition: string;
 };
 
 type RecommendationData = {
@@ -25,21 +43,28 @@ type RecommendationData = {
   };
   location_string: string;
   boat_type: string;
+  parameters?: {
+    forecast_hours?: number;
+    timezone?: string;
+  };
   forecast_data: {
+    location?: {
+      latitude: number;
+      longitude: number;
+    };
+    forecast_hours?: number;
     forecast: ForecastData[];
+    retrieved_at?: string;
+    data_source?: string;
   };
   ai_recommendations: {
-    safe_windows: Array<{
-      start_time: string;
-      end_time: string;
-      confidence: string;
-      reason: string;
-      wave_condition: string;
-      wind_condition: string;
-    }>;
+    boat_type: string;
+    safe_windows: SafeWindow[];
     best_recommendation: string;
     general_advice: string;
+    avoid_times?: any[];
   };
+  generated_at?: string;
 };
 
 const BOAT_TYPES = [
@@ -54,6 +79,7 @@ const initialRecommendationData: RecommendationData = {
   boat_type: '',
   forecast_data: { forecast: [] },
   ai_recommendations: {
+    boat_type: '',
     safe_windows: [],
     best_recommendation: '',
     general_advice: ''
@@ -78,7 +104,6 @@ export default function PrakiraanPage() {
   const [authError, setAuthError] = useState('');
   const router = useRouter();
 
-  // Initialize token refresh mechanism
   useTokenRefresh();
 
   const fetchTimeRecommendations = async (lat: number, lng: number) => {
@@ -95,7 +120,10 @@ export default function PrakiraanPage() {
           latitude: lat,
           longitude: lng,
           boat_type: selectedBoatType,
-          forecast_hours: 24
+          forecast_data: {
+            forecast_hours: 24,
+            forecast: []
+          }
         })
       });
 
@@ -109,29 +137,40 @@ export default function PrakiraanPage() {
 
       const result = await response.json();
       
-      if (result.success && result.data) {
-        // Normalize the response data to match our type
-        const normalizedData = {
-          ...result.data,
-          forecast_data: result.data.forecast_data || { forecast: [] },
-          ai_recommendations: result.data.ai_recommendations || {
-            safe_windows: [],
-            best_recommendation: '',
-            general_advice: ''
-          }
-        };
+      if (result?.success && result?.data) {
+        const data = result.data;
+        setRecommendationData({
+          coordinates: data.coordinates || initialRecommendationData.coordinates,
+          location_string: data.location_string || `${data.coordinates?.latitude}, ${data.coordinates?.longitude}`,
+          boat_type: data.boat_type || selectedBoatType,
+          parameters: data.parameters,
+          forecast_data: {
+            location: data.forecast_data?.location,
+            forecast_hours: data.forecast_data?.forecast_hours,
+            forecast: data.forecast_data?.forecast || [],
+            retrieved_at: data.forecast_data?.retrieved_at,
+            data_source: data.forecast_data?.data_source || 'tidak diketahui'
+          },
+          ai_recommendations: {
+            boat_type: data.ai_recommendations?.boat_type || selectedBoatType,
+            safe_windows: data.ai_recommendations?.safe_windows || [],
+            best_recommendation: data.ai_recommendations?.best_recommendation || '',
+            general_advice: data.ai_recommendations?.general_advice || '',
+            avoid_times: data.ai_recommendations?.avoid_times || []
+          },
+          generated_at: data.generated_at
+        });
         
-        setRecommendationData(normalizedData);
         setLocation({ 
-          lat: normalizedData.coordinates.latitude, 
-          lng: normalizedData.coordinates.longitude 
+          lat: data.coordinates?.latitude || lat, 
+          lng: data.coordinates?.longitude || lng 
         });
         setManualInput({
-          lat: normalizedData.coordinates.latitude.toString(),
-          lng: normalizedData.coordinates.longitude.toString()
+          lat: (data.coordinates?.latitude || lat).toString(),
+          lng: (data.coordinates?.longitude || lng).toString()
         });
       } else {
-        setAuthError(result.message || 'Data forecast tidak valid');
+        setAuthError(result?.message || 'Data forecast tidak valid');
         setRecommendationData(initialRecommendationData);
       }
     } catch (error) {
@@ -167,14 +206,28 @@ export default function PrakiraanPage() {
 
   const formatTime = (timeString: string) => {
     try {
-      return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) {
+        // If parsing fails, try to format as simple time (HH:MM)
+        const timeParts = timeString.split(':');
+        if (timeParts.length >= 2) {
+          return `${timeParts[0]}:${timeParts[1]}`;
+        }
+        return timeString;
+      }
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } catch {
-      return timeString; // Return as-is if parsing fails
+      return timeString;
     }
   };
 
   const formatNumber = (value?: number, decimals: number = 1) => {
-    return value !== undefined ? value.toFixed(decimals) : '-';
+    if (value === undefined || value === null) return '-';
+    return Number(value).toFixed(decimals);
+  };
+
+  const getFirstForecast = () => {
+    return recommendationData.forecast_data?.forecast?.[0] || {};
   };
 
   return (
@@ -238,6 +291,7 @@ export default function PrakiraanPage() {
                   <p className="font-medium text-[#053040]">
                     {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
                   </p>
+                  <span className="text-sm text-[#5c7893]">Lokasi: {recommendationData.location_string}</span>
                 </div>
               </div>
 
@@ -267,6 +321,13 @@ export default function PrakiraanPage() {
                     <Clock size={16} />
                     {loading.fetch ? 'Memuat...' : 'Perbarui Rekomendasi'}
                   </button>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <span className="text-sm text-[#5c7893]">Jenis kapal saat ini:</span>
+                  <p className="font-medium text-[#053040]">
+                    {BOAT_TYPES.find(t => t.value === recommendationData.boat_type)?.label || 
+                     BOAT_TYPES.find(t => t.value === selectedBoatType)?.label}
+                  </p>
                 </div>
               </div>
 
@@ -299,7 +360,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Kecepatan Angin</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.wind_speed)} knots
+                      {formatNumber(getFirstForecast().wind_speed)} knots
                     </p>
                   </div>
                   
@@ -309,7 +370,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Tinggi Gelombang</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.wave_height)} m
+                      {formatNumber(getFirstForecast().wave_height)} m
                     </p>
                   </div>
                   
@@ -319,7 +380,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Suhu</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.temperature)} °C
+                      {formatNumber(getFirstForecast().temperature)} °C
                     </p>
                   </div>
                   
@@ -329,7 +390,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Tekanan Atmosfer</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.pressure)} hPa
+                      {formatNumber(getFirstForecast().pressure)} hPa
                     </p>
                   </div>
                   
@@ -339,7 +400,17 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Arah Angin</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.wind_direction, 0)}°
+                      {formatNumber(getFirstForecast().wind_direction, 0)}°
+                    </p>
+                  </div>
+
+                  <div className="bg-[#f8fafc] p-3 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Waves size={16} className="text-[#00698f]" />
+                      <span className="text-sm font-medium text-[#053040]">Periode Gelombang</span>
+                    </div>
+                    <p className="text-2xl font-bold mt-2 text-[#053040]">
+                      {formatNumber(getFirstForecast().wave_period, 1)} s
                     </p>
                   </div>
                 </div>
@@ -354,16 +425,24 @@ export default function PrakiraanPage() {
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                   <h2 className="text-lg font-semibold text-[#053040] mb-4">Detail Prakiraan</h2>
                   
+                  <div className="mb-2 text-sm text-gray-600">
+                    <p>Periode prakiraan: {recommendationData.forecast_data.forecast_hours || 24} jam | 
+                    Sumber data: {recommendationData.forecast_data.data_source || 'tidak diketahui'} | 
+                    Diperbarui: {recommendationData.forecast_data.retrieved_at ? 
+                      new Date(recommendationData.forecast_data.retrieved_at).toLocaleString() : 'tidak diketahui'}
+                    </p>
+                  </div>
+                  
                   <div className="overflow-x-auto">
                     <table className="min-w-full bg-white border border-gray-200">
                       <thead>
                         <tr className="bg-gray-50">
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kecepatan Angin (knots)</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tinggi Gelombang (m)</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Arah Gelombang (°)</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kecepatan Angin (knots)</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Arah Angin (°)</th>
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Suhu (°C)</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tekanan (hPa)</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -372,11 +451,11 @@ export default function PrakiraanPage() {
                             <td className="px-4 py-2 text-sm text-gray-700">
                               {formatTime(item.time)}
                             </td>
-                            <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.wind_speed)}</td>
                             <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.wave_height)}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.wave_direction, 0)}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.wind_speed)}</td>
                             <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.wind_direction, 0)}</td>
                             <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.temperature)}</td>
-                            <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.pressure)}</td>
                           </tr>
                         ))}
                       </tbody>
