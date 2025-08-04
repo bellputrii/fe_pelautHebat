@@ -33,13 +33,13 @@ export default function NavbarContent() {
       await signOut(auth)
       
       // 2. Send logout request to backend
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       })
 
       if (response.ok) {
-        router.push('/dashboard') // Redirect to dashboard after logout
+        router.push('/beranda') // Redirect to beranda after logout
       } else {
         console.error('Logout failed:', await response.text())
       }
@@ -61,9 +61,9 @@ export default function NavbarContent() {
 
   return (
     <div className="flex items-center gap-6">
-      {/* Always show Dashboard link */}
+      {/* Always show beranda link */}
       <Link 
-        href="/dashboard" 
+        href="/beranda" 
         className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:bg-[#2C5B6B] hover:text-white group"
       >
         <Home className="text-[#053040] group-hover:text-white" size={20} />

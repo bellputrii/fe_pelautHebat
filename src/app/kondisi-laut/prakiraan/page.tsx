@@ -11,11 +11,11 @@ import { authFetch } from '@/app/lib/api';
 
 type ForecastData = {
   time: string;
-  wave_height: number;
-  wind_speed: number;
-  wind_direction: number;
-  temperature: number;
-  pressure: number;
+  wave_height?: number;
+  wind_speed?: number;
+  wind_direction?: number;
+  temperature?: number;
+  pressure?: number;
 };
 
 type RecommendationData = {
@@ -47,6 +47,18 @@ const BOAT_TYPES = [
   { value: 'kapal_nelayan', label: 'Kapal Nelayan' },
   { value: 'kapal_besar', label: 'Kapal Besar' }
 ];
+
+const initialRecommendationData: RecommendationData = {
+  coordinates: { latitude: 0, longitude: 0 },
+  location_string: '',
+  boat_type: '',
+  forecast_data: { forecast: [] },
+  ai_recommendations: {
+    safe_windows: [],
+    best_recommendation: '',
+    general_advice: ''
+  }
+};
 
 export default function PrakiraanPage() {
   const [location, setLocation] = useState({
@@ -98,7 +110,7 @@ export default function PrakiraanPage() {
       let cleanJson = textResponse.replace(/^```json|```$/g, '').trim();
       
       const data = JSON.parse(cleanJson);
-      if (data.success) {
+      if (data.success && data.data?.forecast_data?.forecast) {
         setRecommendationData(data.data);
         setLocation({ lat: data.data.coordinates.latitude, lng: data.data.coordinates.longitude });
         setManualInput({
@@ -106,13 +118,15 @@ export default function PrakiraanPage() {
           lng: data.data.coordinates.longitude.toString()
         });
       } else {
-        setAuthError(data.message || 'Gagal memuat rekomendasi');
+        setAuthError(data.message || 'Data forecast tidak valid');
+        setRecommendationData(initialRecommendationData);
       }
     } catch (error) {
       console.error('Error fetching recommendations:', error);
       if (error instanceof Error) {
         setAuthError(error.message || 'Terjadi kesalahan saat menghubungi server');
       }
+      setRecommendationData(initialRecommendationData);
     } finally {
       setLoading(prev => ({...prev, fetch: false}));
     }
@@ -140,6 +154,10 @@ export default function PrakiraanPage() {
 
   const formatTime = (timeString: string) => {
     return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatNumber = (value?: number, decimals: number = 1) => {
+    return value !== undefined ? value.toFixed(decimals) : '-';
   };
 
   return (
@@ -264,7 +282,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Kecepatan Angin</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {recommendationData?.forecast_data?.forecast[0]?.wind_speed?.toFixed(1) || '-'} knots
+                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.wind_speed)} knots
                     </p>
                   </div>
                   
@@ -274,7 +292,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Tinggi Gelombang</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {recommendationData?.forecast_data?.forecast[0]?.wave_height?.toFixed(1) || '-'} m
+                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.wave_height)} m
                     </p>
                   </div>
                   
@@ -284,7 +302,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Suhu</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {recommendationData?.forecast_data?.forecast[0]?.temperature?.toFixed(1) || '-'} °C
+                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.temperature)} °C
                     </p>
                   </div>
                   
@@ -294,7 +312,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Tekanan Atmosfer</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {recommendationData?.forecast_data?.forecast[0]?.pressure?.toFixed(1) || '-'} hPa
+                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.pressure)} hPa
                     </p>
                   </div>
                   
@@ -304,14 +322,18 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Arah Angin</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {recommendationData?.forecast_data?.forecast[0]?.wind_direction?.toFixed(0) || '-'}°
+                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.wind_direction, 0)}°
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Forecast Table */}
-              {recommendationData?.forecast_data && (
+              {loading.fetch ? (
+                <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100 text-center py-8">
+                  <p>Memuat data forecast...</p>
+                </div>
+              ) : recommendationData?.forecast_data?.forecast?.length ? (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                   <h2 className="text-lg font-semibold text-[#053040] mb-4">Detail Prakiraan</h2>
                   
@@ -333,21 +355,25 @@ export default function PrakiraanPage() {
                             <td className="px-4 py-2 text-sm text-gray-700">
                               {formatTime(item.time)}
                             </td>
-                            <td className="px-4 py-2 text-sm text-gray-700">{item.wind_speed.toFixed(1)}</td>
-                            <td className="px-4 py-2 text-sm text-gray-700">{item.wave_height.toFixed(1)}</td>
-                            <td className="px-4 py-2 text-sm text-gray-700">{item.wind_direction.toFixed(0)}</td>
-                            <td className="px-4 py-2 text-sm text-gray-700">{item.temperature.toFixed(1)}</td>
-                            <td className="px-4 py-2 text-sm text-gray-700">{item.pressure.toFixed(1)}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.wind_speed)}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.wave_height)}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.wind_direction, 0)}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.temperature)}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">{formatNumber(item.pressure)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 </div>
+              ) : (
+                <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100 text-center py-8">
+                  <p>Tidak ada data forecast yang tersedia</p>
+                </div>
               )}
 
               {/* Safe Windows */}
-              {recommendationData?.ai_recommendations?.safe_windows && (
+              {recommendationData?.ai_recommendations?.safe_windows?.length ? (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                   <h2 className="text-lg font-semibold text-[#053040] mb-4 flex items-center gap-2">
                     <Clock size={18} />
@@ -384,7 +410,7 @@ export default function PrakiraanPage() {
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* General Advice */}
               {recommendationData?.ai_recommendations?.general_advice && (
