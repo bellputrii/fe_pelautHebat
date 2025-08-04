@@ -38,6 +38,18 @@ function CommunityReportFormContent() {
   const communityId = searchParams.get('communityId');
   const communityName = searchParams.get('communityName');
 
+  const safetyLevelLabels = {
+    safe: 'Aman',
+    caution: 'Hati-hati',
+    danger: 'Berbahaya'
+  };
+
+  const urgencyLevelLabels = {
+    low: 'Rendah',
+    medium: 'Sedang',
+    high: 'Tinggi'
+  };
+
   const [authError, setAuthError] = useState('');
 
   // Form states
@@ -84,6 +96,11 @@ function CommunityReportFormContent() {
 
   // Initialize token refresh mechanism
   useTokenRefresh();
+
+  // Format tag by replacing spaces with underscores and converting to lowercase
+  const formatTag = (tag: string): string => {
+    return tag.trim().replace(/\s+/g, '_').toLowerCase();
+  };
 
   // Validate form function
   const validateForm = (): boolean => {
@@ -175,8 +192,9 @@ function CommunityReportFormContent() {
   };
 
   const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
+    const formattedTag = formatTag(newTag);
+    if (formattedTag && !tags.includes(formattedTag)) {
+      setTags([...tags, formattedTag]);
       setNewTag('');
     }
   };
@@ -394,7 +412,7 @@ function CommunityReportFormContent() {
                             className="mr-2"
                             required
                           />
-                          <span className="capitalize">{level}</span>
+                          <span>{urgencyLevelLabels[level]}</span>
                         </label>
                       ))}
                     </div>
@@ -573,7 +591,7 @@ function CommunityReportFormContent() {
                             className="mr-2"
                             required
                           />
-                          <span className="capitalize">{level}</span>
+                          <span>{safetyLevelLabels[level]}</span>
                         </label>
                       ))}
                     </div>
@@ -600,7 +618,7 @@ function CommunityReportFormContent() {
                                   className="mr-2"
                                   required
                                 />
-                                <span className="capitalize">{level}</span>
+                                <span>{safetyLevelLabels[level]}</span>
                               </label>
                             ))}
                           </div>
@@ -668,7 +686,7 @@ function CommunityReportFormContent() {
                       type="text"
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Tambah tag baru"
+                      placeholder="Tambah tag baru (contoh: kondisi_baik)"
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <button
@@ -679,6 +697,9 @@ function CommunityReportFormContent() {
                       <Plus size={16} />
                     </button>
                   </div>
+                  <p className="text-sm text-gray-500">
+                    Tag akan otomatis diubah menjadi huruf kecil dan spasi diganti dengan underscore (_)
+                  </p>
                 </div>
               </div>
 
