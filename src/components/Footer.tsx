@@ -2,10 +2,24 @@
 
 import Link from 'next/link'
 import { Waves, Shield, FileText, Mail } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { auth } from '@/firebase/config'
+import { onAuthStateChanged } from 'firebase/auth'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
   const version = "1.0.0"
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [loadingAuth, setLoadingAuth] = useState(true)
+
+  // Check auth state on component mount
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user)
+      setLoadingAuth(false)
+    })
+    return () => unsubscribe()
+  }, [])
 
   return (
     <footer className="bg-[#053040] text-white py-12">
@@ -25,12 +39,31 @@ export default function Footer() {
           {/* Quick Links */}
           <div>
             <h3 className="font-semibold text-lg mb-4">Navigasi</h3>
-            <ul className="space-y-2 text-[#C9CFCF]">
-              <li><Link href="/beranda" className="hover:text-white transition">Beranda</Link></li>
-              <li><Link href="/beranda" className="hover:text-white transition">Checklist</Link></li>
-              <li><Link href="/beranda" className="hover:text-white transition">Peta Komunitas</Link></li>
-              <li><Link href="/beranda" className="hover:text-white transition">Kondisi Laut</Link></li>
-            </ul>
+            {loadingAuth ? (
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-700 rounded"></div>
+                <div className="h-4 bg-gray-700 rounded"></div>
+                <div className="h-4 bg-gray-700 rounded"></div>
+                <div className="h-4 bg-gray-700 rounded"></div>
+              </div>
+            ) : (
+              <ul className="space-y-2 text-[#C9CFCF]">
+                <li><Link href="/beranda" className="hover:text-white transition">Beranda</Link></li>
+                {isLoggedIn ? (
+                  <>
+                    <li><Link href="/checklist" className="hover:text-white transition">Checklist</Link></li>
+                    <li><Link href="/peta-komunitas" className="hover:text-white transition">Peta Komunitas</Link></li>
+                    <li><Link href="/kondisi-laut" className="hover:text-white transition">Kondisi Laut</Link></li>
+                  </>
+                ) : (
+                  <>
+                    <li><Link href="/beranda" className="hover:text-white transition">Checklist</Link></li>
+                    <li><Link href="/beranda" className="hover:text-white transition">Peta Komunitas</Link></li>
+                    <li><Link href="/beranda" className="hover:text-white transition">Kondisi Laut</Link></li>
+                  </>
+                )}
+              </ul>
+            )}
           </div>
 
           {/* Legal */}
