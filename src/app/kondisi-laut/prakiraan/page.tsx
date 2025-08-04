@@ -69,7 +69,7 @@ export default function PrakiraanPage() {
     lat: '-5.728351302091711',
     lng: '132.55887920875085',
   });
-  const [recommendationData, setRecommendationData] = useState<RecommendationData | null>(null);
+  const [recommendationData, setRecommendationData] = useState<RecommendationData>(initialRecommendationData);
   const [loading, setLoading] = useState({
     fetch: false,
     submit: false
@@ -94,7 +94,8 @@ export default function PrakiraanPage() {
         body: JSON.stringify({
           latitude: lat,
           longitude: lng,
-          boat_type: selectedBoatType
+          boat_type: selectedBoatType,
+          forecast_hours: 24
         })
       });
 
@@ -106,19 +107,31 @@ export default function PrakiraanPage() {
         throw new Error('Gagal memuat rekomendasi');
       }
 
-      const textResponse = await response.text();
-      let cleanJson = textResponse.replace(/^```json|```$/g, '').trim();
+      const result = await response.json();
       
-      const data = JSON.parse(cleanJson);
-      if (data.success && data.data?.forecast_data?.forecast) {
-        setRecommendationData(data.data);
-        setLocation({ lat: data.data.coordinates.latitude, lng: data.data.coordinates.longitude });
+      if (result.success && result.data) {
+        // Normalize the response data to match our type
+        const normalizedData = {
+          ...result.data,
+          forecast_data: result.data.forecast_data || { forecast: [] },
+          ai_recommendations: result.data.ai_recommendations || {
+            safe_windows: [],
+            best_recommendation: '',
+            general_advice: ''
+          }
+        };
+        
+        setRecommendationData(normalizedData);
+        setLocation({ 
+          lat: normalizedData.coordinates.latitude, 
+          lng: normalizedData.coordinates.longitude 
+        });
         setManualInput({
-          lat: data.data.coordinates.latitude.toString(),
-          lng: data.data.coordinates.longitude.toString()
+          lat: normalizedData.coordinates.latitude.toString(),
+          lng: normalizedData.coordinates.longitude.toString()
         });
       } else {
-        setAuthError(data.message || 'Data forecast tidak valid');
+        setAuthError(result.message || 'Data forecast tidak valid');
         setRecommendationData(initialRecommendationData);
       }
     } catch (error) {
@@ -153,7 +166,11 @@ export default function PrakiraanPage() {
   }, []);
 
   const formatTime = (timeString: string) => {
-    return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    try {
+      return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return timeString; // Return as-is if parsing fails
+    }
   };
 
   const formatNumber = (value?: number, decimals: number = 1) => {
@@ -219,7 +236,7 @@ export default function PrakiraanPage() {
                 <div className="mt-3 pt-3 border-t border-gray-100">
                   <span className="text-sm text-[#5c7893]">Koordinat saat ini:</span>
                   <p className="font-medium text-[#053040]">
-                    {location.lat}, {location.lng}
+                    {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
                   </p>
                 </div>
               </div>
@@ -254,7 +271,7 @@ export default function PrakiraanPage() {
               </div>
 
               {/* Quick Summary Card */}
-              {recommendationData?.ai_recommendations && (
+              {recommendationData.ai_recommendations?.best_recommendation && (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                   <h2 className="text-lg font-semibold text-[#053040] mb-3 flex items-center gap-2">
                     <Bot size={18} />
@@ -282,7 +299,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Kecepatan Angin</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.wind_speed)} knots
+                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.wind_speed)} knots
                     </p>
                   </div>
                   
@@ -292,7 +309,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Tinggi Gelombang</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.wave_height)} m
+                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.wave_height)} m
                     </p>
                   </div>
                   
@@ -302,7 +319,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Suhu</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.temperature)} °C
+                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.temperature)} °C
                     </p>
                   </div>
                   
@@ -312,7 +329,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Tekanan Atmosfer</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.pressure)} hPa
+                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.pressure)} hPa
                     </p>
                   </div>
                   
@@ -322,7 +339,7 @@ export default function PrakiraanPage() {
                       <span className="text-sm font-medium text-[#053040]">Arah Angin</span>
                     </div>
                     <p className="text-2xl font-bold mt-2 text-[#053040]">
-                      {formatNumber(recommendationData?.forecast_data?.forecast[0]?.wind_direction, 0)}°
+                      {formatNumber(recommendationData.forecast_data?.forecast[0]?.wind_direction, 0)}°
                     </p>
                   </div>
                 </div>
@@ -333,7 +350,7 @@ export default function PrakiraanPage() {
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100 text-center py-8">
                   <p>Memuat data forecast...</p>
                 </div>
-              ) : recommendationData?.forecast_data?.forecast?.length ? (
+              ) : recommendationData.forecast_data?.forecast?.length ? (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                   <h2 className="text-lg font-semibold text-[#053040] mb-4">Detail Prakiraan</h2>
                   
@@ -373,7 +390,7 @@ export default function PrakiraanPage() {
               )}
 
               {/* Safe Windows */}
-              {recommendationData?.ai_recommendations?.safe_windows?.length ? (
+              {recommendationData.ai_recommendations?.safe_windows?.length ? (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                   <h2 className="text-lg font-semibold text-[#053040] mb-4 flex items-center gap-2">
                     <Clock size={18} />
@@ -413,7 +430,7 @@ export default function PrakiraanPage() {
               ) : null}
 
               {/* General Advice */}
-              {recommendationData?.ai_recommendations?.general_advice && (
+              {recommendationData.ai_recommendations?.general_advice && (
                 <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                   <h2 className="text-lg font-semibold text-[#053040] mb-4 flex items-center gap-2">
                     <Lightbulb size={18} />
