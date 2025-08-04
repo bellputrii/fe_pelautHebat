@@ -102,8 +102,8 @@ export default function KondisiLautPage() {
     anomalies: false
   });
   const [manualInput, setManualInput] = useState({
-    lat: '-5.728',
-    lng: '132.56'
+    lat: '-5.728351302091711',
+    lng: '132.55887920875085',
   });
   const [authError, setAuthError] = useState('');
   const [mapReady, setMapReady] = useState(false);
@@ -276,7 +276,7 @@ export default function KondisiLautPage() {
                       value={manualInput.lat}
                       onChange={(e) => setManualInput({...manualInput, lat: e.target.value})}
                       className="w-full border border-gray-200 p-2 rounded-lg text-sm focus:ring-2 focus:ring-[#053040] focus:border-transparent"
-                      placeholder="-5.728"
+                      placeholder="-5.728351302091711"
                     />
                   </div>
                   <div>
@@ -286,7 +286,7 @@ export default function KondisiLautPage() {
                       value={manualInput.lng}
                       onChange={(e) => setManualInput({...manualInput, lng: e.target.value})}
                       className="w-full border border-gray-200 p-2 rounded-lg text-sm focus:ring-2 focus:ring-[#053040] focus:border-transparent"
-                      placeholder="132.56"
+                      placeholder="132.55887920875085"
                     />
                   </div>
                   <button
