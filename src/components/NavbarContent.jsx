@@ -74,6 +74,13 @@ export default function NavbarContent() {
       {isLoggedIn && (
         <>
           <Link 
+            href="/kondisi-laut" 
+            className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:bg-[#2C5B6B] hover:text-white group"
+          >
+            <Waves className="text-[#053040] group-hover:text-white" size={20} />
+            <span className="hidden sm:inline text-[#053040] group-hover:text-white">Kondisi Laut</span>
+          </Link>
+          <Link 
             href="/checklist" 
             className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:bg-[#2C5B6B] hover:text-white group"
           >
@@ -89,13 +96,6 @@ export default function NavbarContent() {
             <span className="hidden sm:inline text-[#053040] group-hover:text-white">Peta Komunitas</span>
           </Link>
           
-          <Link 
-            href="/kondisi-laut" 
-            className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:bg-[#2C5B6B] hover:text-white group"
-          >
-            <Waves className="text-[#053040] group-hover:text-white" size={20} />
-            <span className="hidden sm:inline text-[#053040] group-hover:text-white">Kondisi Laut</span>
-          </Link>
         </>
       )}
 

@@ -1,25 +1,25 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { Waves, Shield, FileText, Mail } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import { auth } from '@/firebase/config'
-import { onAuthStateChanged } from 'firebase/auth'
+import Link from 'next/link';
+import { Waves, Shield, FileText, Mail } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { auth } from '@/firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear()
-  const version = "1.0.0"
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [loadingAuth, setLoadingAuth] = useState(true)
+  const currentYear = new Date().getFullYear();
+  const version = '1.0.0';
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
   // Check auth state on component mount
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsLoggedIn(!!user)
-      setLoadingAuth(false)
-    })
-    return () => unsubscribe()
-  }, [])
+      setIsLoggedIn(!!user);
+      setLoadingAuth(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <footer className="bg-[#053040] text-white py-12">
@@ -28,10 +28,10 @@ export default function Footer() {
           {/* About Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Waves className="text-[#2C5B6B]" size={24} />
-              <span className="font-bold text-xl">Pelaut Hebat</span>
+              <Waves className="text-[#2C5B6B]" size={28} />
+              <span className="font-bold text-2xl">Pelaut Hebat</span>
             </div>
-            <p className="text-[#C9CFCF] text-sm">
+            <p className="text-[#C9CFCF] text-sm leading-relaxed">
               Meningkatkan keselamatan transportasi laut dan kesejahteraan masyarakat pesisir melalui solusi inovatif.
             </p>
           </div>
@@ -48,18 +48,46 @@ export default function Footer() {
               </div>
             ) : (
               <ul className="space-y-2 text-[#C9CFCF]">
-                <li><Link href="/beranda" className="hover:text-white transition">Beranda</Link></li>
+                <li>
+                  <Link href="/beranda" className="hover:text-white transition">
+                    Beranda
+                  </Link>
+                </li>
                 {isLoggedIn ? (
                   <>
-                    <li><Link href="/checklist" className="hover:text-white transition">Checklist</Link></li>
-                    <li><Link href="/peta-komunitas" className="hover:text-white transition">Peta Komunitas</Link></li>
-                    <li><Link href="/kondisi-laut" className="hover:text-white transition">Kondisi Laut</Link></li>
+                    <li>
+                      <Link href="/checklist" className="hover:text-white transition">
+                        Checklist
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/peta-komunitas" className="hover:text-white transition">
+                        Peta Komunitas
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/kondisi-laut" className="hover:text-white transition">
+                        Kondisi Laut
+                      </Link>
+                    </li>
                   </>
                 ) : (
                   <>
-                    <li><Link href="/beranda" className="hover:text-white transition">Checklist</Link></li>
-                    <li><Link href="/beranda" className="hover:text-white transition">Peta Komunitas</Link></li>
-                    <li><Link href="/beranda" className="hover:text-white transition">Kondisi Laut</Link></li>
+                    <li>
+                      <Link href="/beranda" className="hover:text-white transition">
+                        Checklist
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/beranda" className="hover:text-white transition">
+                        Peta Komunitas
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/beranda" className="hover:text-white transition">
+                        Kondisi Laut
+                      </Link>
+                    </li>
                   </>
                 )}
               </ul>
@@ -103,18 +131,19 @@ export default function Footer() {
         <div className="mt-10 p-4 bg-[#0a3a4d] rounded-lg border border-[#2C5B6B]">
           <h4 className="font-medium text-[#C9CFCF] mb-2 text-center">Disclaimer Hak Cipta</h4>
           <p className="text-xs text-[#a0aec0] text-center leading-relaxed">
-            Kami tidak berniat untuk menyebarluaskan atau memperjualbelikan konten apapun yang memiliki hak cipta. 
-            Semua materi seperti video, gambar, dan data lainnya yang mungkin ditampilkan bukan hasil produksi Kami, 
-            dan sepenuhnya merupakan hak milik pemilik aslinya. Website ini tidak menyimpan file video apapun 
-            di server pribadi, melainkan hanya menggunakan link atau embed dari pihak ketiga untuk simulasi teknis 
-            dan pemberian informasi.
+            Kami tidak berniat untuk menyebarluaskan atau memperjualbelikan konten apapun yang memiliki hak cipta. Semua
+            materi seperti video, gambar, dan data lainnya yang mungkin ditampilkan bukan hasil produksi Kami, dan
+            sepenuhnya merupakan hak milik pemilik aslinya. Website ini tidak menyimpan file video apapun di server
+            pribadi, melainkan hanya menggunakan link atau embed dari pihak ketiga untuk simulasi teknis dan pemberian
+            informasi.
           </p>
         </div>
 
+        {/* Footer Bottom */}
         <div className="border-t border-[#2C5B6B] mt-8 pt-8 text-center text-sm text-[#C9CFCF]">
           <p>Dibangun dengan dedikasi untuk keselamatan pelayaran Indonesia</p>
         </div>
       </div>
     </footer>
-  )
+  );
 }
