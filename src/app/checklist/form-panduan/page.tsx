@@ -226,30 +226,30 @@ export default function InformasiBerlayarPage() {
   return (
     <>
       <LayoutNavbar>
-        <main className="min-h-screen pt-20 p-4 md:p-8 bg-white dark:bg-gray-900 max-w-7xl mx-auto">
+        <main className="min-h-screen pt-20 p-4 md:p-8 bg-white max-w-7xl mx-auto">
           <div className="container mx-auto px-2 md:px-4 py-8 md:py-12 max-w-3xl">
             {/* Header Section */}
             <div className="text-center mb-8 md:mb-10">
-              <div className="inline-flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mb-4">
-                <Waves className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="inline-flex items-center justify-center bg-blue-100 p-3 rounded-full mb-4">
+                <Waves className="w-6 h-6 text-blue-600" />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-blue-900 dark:text-white mb-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-blue-900 mb-3">
                 Persiapan Berlayar
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 max-w-lg mx-auto text-sm md:text-base">
+              <p className="text-gray-600 max-w-lg mx-auto text-sm md:text-base">
                 Isi informasi perjalanan Anda untuk mendapatkan panduan keselamatan yang disesuaikan
               </p>
             </div>
 
             {/* Info Box */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-medium text-blue-900 dark:text-blue-100 text-sm mb-1">
+                  <h3 className="font-medium text-blue-900 text-sm mb-1">
                     Informasi Penting
                   </h3>
-                  <p className="text-blue-700 dark:text-blue-300 text-xs">
+                  <p className="text-blue-700 text-xs">
                     Beberapa field akan diisi otomatis dengan nilai default jika dikosongkan. Pastikan untuk memeriksa semua informasi sebelum melanjutkan.
                   </p>
                 </div>
@@ -258,23 +258,23 @@ export default function InformasiBerlayarPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-lg mb-6 md:mb-8 flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 mt-0.5 flex-shrink-0" />
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6 md:mb-8 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-medium text-red-800 dark:text-red-300">Perhatian</h3>
-                  <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
+                  <h3 className="font-medium text-red-800">Perhatian</h3>
+                  <p className="text-sm text-red-700">{error}</p>
                 </div>
               </div>
             )}
 
             {/* Form Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-6">
                 {/* Grid Layout for Form Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   {/* Tujuan */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                       <Navigation className="w-4 h-4" />
                       Tujuan Perjalanan
                     </label>
@@ -282,7 +282,7 @@ export default function InformasiBerlayarPage() {
                       name="tujuan"
                       value={form.tujuan}
                       onChange={handleChange}
-                      className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       required
                     >
                       <option value="">Pilih tujuan perjalanan</option>
@@ -291,14 +291,14 @@ export default function InformasiBerlayarPage() {
                       <option value="wisata">Wisata & Rekreasi</option>
                       <option value="darurat">Situasi Darurat</option>
                     </select>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Pilih tujuan utama perjalanan Anda
                     </p>
                   </div>
 
                   {/* Jenis Perahu */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                       <Waves className="w-4 h-4" />
                       Jenis Perahu
                     </label>
@@ -306,7 +306,7 @@ export default function InformasiBerlayarPage() {
                       name="jenisPerahu"
                       value={form.jenisPerahu}
                       onChange={handleChange}
-                      className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       required
                     >
                       <option value="">Pilih jenis perahu</option>
@@ -315,14 +315,14 @@ export default function InformasiBerlayarPage() {
                       <option value="sampan">Sampan / Perahu Dayung</option>
                       <option value="kapal_besar">Kapal Besar</option>
                     </select>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Pilih jenis kendaraan air yang akan digunakan
                     </p>
                   </div>
 
                   {/* Durasi */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       Durasi Perjalanan
                       <Tooltip text="Durasi perkiraan dari keberangkatan sampai kembali" />
@@ -335,21 +335,21 @@ export default function InformasiBerlayarPage() {
                         name="durasi"
                         value={form.durasi}
                         onChange={handleNumberChange}
-                        className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="120"
                         min="30"
                         max="1440"
                       />
-                      <span className="absolute right-3 top-2.5 text-gray-400 dark:text-gray-500 text-sm">menit</span>
+                      <span className="absolute right-3 top-2.5 text-gray-400 text-sm">menit</span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Default: 120 menit (2 jam) jika dikosongkan
                     </p>
                   </div>
 
                   {/* Penumpang */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                       <Users className="w-4 h-4" />
                       Jumlah Penumpang
                       <Tooltip text="Termasuk diri Anda dan seluruh awak kapal" />
@@ -361,19 +361,19 @@ export default function InformasiBerlayarPage() {
                       name="penumpang"
                       value={form.penumpang}
                       onChange={handleNumberChange}
-                      className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       placeholder="2"
                       min="1"
                       max="100"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Default: 2 penumpang jika dikosongkan
                     </p>
                   </div>
 
                   {/* Lokasi Keberangkatan */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
                       Lokasi Keberangkatan
                     </label>
@@ -382,18 +382,18 @@ export default function InformasiBerlayarPage() {
                       name="lokasiKeberangkatan"
                       value={form.lokasiKeberangkatan}
                       onChange={handleChange}
-                      className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       placeholder="Contoh: Pelabuhan Muara Angke, Jakarta"
                       required
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Tuliskan pelabuhan atau titik keberangkatan
                     </p>
                   </div>
 
                   {/* Lokasi Tujuan */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
                       Lokasi Tujuan
                     </label>
@@ -402,18 +402,18 @@ export default function InformasiBerlayarPage() {
                       name="lokasiTujuan"
                       value={form.lokasiTujuan}
                       onChange={handleChange}
-                      className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       placeholder="Contoh: Pulau Seribu, Kepulauan Seribu"
                       required
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Tuliskan pulau atau destinasi tujuan
                     </p>
                   </div>
 
                   {/* Waktu Keberangkatan */}
                   <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       Waktu Keberangkatan
                       <Tooltip text="Perkiraan waktu ketika Anda berencana berangkat" />
@@ -423,17 +423,17 @@ export default function InformasiBerlayarPage() {
                       name="waktuKeberangkatan"
                       value={form.waktuKeberangkatan}
                       onChange={handleChange}
-                      className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       required
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Pilih tanggal dan waktu rencana keberangkatan
                     </p>
                   </div>
 
                   {/* Kondisi Cuaca */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                       <Cloud className="w-4 h-4" />
                       Kondisi Cuaca
                       <Tooltip text="Perkiraan kondisi cuaca saat keberangkatan" />
@@ -442,7 +442,7 @@ export default function InformasiBerlayarPage() {
                       name="kondisiCuaca"
                       value={form.kondisiCuaca}
                       onChange={handleChange}
-                      className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                       required
                     >
                       <option value="">Pilih kondisi cuaca</option>
@@ -450,14 +450,14 @@ export default function InformasiBerlayarPage() {
                       <option value="moderate">Sedang (gelombang sedang, angin cukup)</option>
                       <option value="rough">Buruk (gelombang besar, angin kencang)</option>
                     </select>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Sesuaikan dengan prakiraan cuaca terbaru
                     </p>
                   </div>
 
                   {/* Tingkat Urgensi */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
                       <Gauge className="w-4 h-4" />
                       Tingkat Urgensi
                       <Tooltip text="Tingkat kepentingan perjalanan ini" />
@@ -466,20 +466,20 @@ export default function InformasiBerlayarPage() {
                       name="tingkatUrgensi"
                       value={form.tingkatUrgensi}
                       onChange={handleChange}
-                      className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                     >
                       <option value="normal">Normal (Perjalanan Biasa)</option>
                       <option value="urgent">Penting (Perlu Segera Sampai)</option>
                       <option value="critical">Kritis (Situasi Darurat)</option>
                     </select>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Pilih sesuai kebutuhan perjalanan
                     </p>
                   </div>
 
                   {/* Jarak */}
                   <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
                       <Route className="w-4 h-4" />
                       Jarak Tempuh
                       <Tooltip text="Perkiraan jarak tempuh melalui laut dalam kilometer" />
@@ -492,29 +492,29 @@ export default function InformasiBerlayarPage() {
                         name="jarak"
                         value={form.jarak}
                         onChange={handleNumberChange}
-                        className="w-full px-3 md:px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         placeholder="5.0"
                         step="0.1"
                         min="0.1"
                         max="1000"
                       />
-                      <span className="absolute right-3 top-2.5 text-gray-400 dark:text-gray-500 text-sm">kilometer</span>
+                      <span className="absolute right-3 top-2.5 text-gray-400 text-sm">kilometer</span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Default: 5 km jika dikosongkan. Contoh: 15.5 untuk 15 setengah kilometer
                     </p>
                   </div>
                 </div>
 
                 {/* Notes Section */}
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start gap-3">
-                    <Info className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                    <Info className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                     <div>
-                      <h3 className="font-medium text-yellow-900 dark:text-yellow-100 text-sm mb-1">
+                      <h3 className="font-medium text-yellow-900 text-sm mb-1">
                         Catatan Pengisian
                       </h3>
-                      <ul className="text-yellow-700 dark:text-yellow-300 text-xs space-y-1">
+                      <ul className="text-yellow-700 text-xs space-y-1">
                         <li>• Field dengan nilai default dapat dikosongkan</li>
                         <li>• Durasi, penumpang, dan jarak akan menggunakan nilai default jika tidak diisi</li>
                         <li>• Pastikan informasi cuaca sesuai dengan prakiraan terbaru</li>
@@ -529,7 +529,7 @@ export default function InformasiBerlayarPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-[#053040] hover:bg-[#2C5B6B] dark:bg-[#2C5B6B] dark:hover:bg-[#3A6D7E] text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[#053040] hover:bg-[#2C5B6B] text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <>

@@ -13,7 +13,7 @@ export default function DashboardPage() {
 
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [city, setCity] = useState<string>('Manyeuw, Maluku'); // Default lokasi
+  const [city, setCity] = useState<string>('Manyeuw, Maluku');
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const testimonialRef = useRef<HTMLDivElement>(null);
@@ -88,67 +88,72 @@ export default function DashboardPage() {
       title: "Cek Kondisi Laut",
       description: "Masuk ke menu kondisi laut dengan titik koordinat sesuai lokasi terkini Anda",
       icon: <Waves className="text-white" size={24} />,
-      color: "from-[#053040] to-[#0A4A60]"
+      color: "bg-[#053040]",
+      borderColor: "border-[#053040]"
     },
     {
       step: 2,
       title: "Cek Prakiraan Cuaca",
       description: "Periksa prakiraan cuaca laut berdasarkan koordinat lokasi terkini",
       icon: <Cloud className="text-white" size={24} />,
-      color: "from-[#0A4A60] to-[#2C5B6B]"
+      color: "bg-[#0A4A60]",
+      borderColor: "border-[#0A4A60]"
     },
     {
       step: 3,
       title: "Filter Panduan Keselamatan",
       description: "Gunakan menu checklist untuk memfilter panduan sesuai kebutuhan Anda",
       icon: <CheckCircle className="text-white" size={24} />,
-      color: "from-[#2C5B6B] to-[#3A6D7E]"
+      color: "bg-[#2C5B6B]",
+      borderColor: "border-[#2C5B6B]"
     },
     {
       step: 4,
       title: "Lakukan Perjalanan",
       description: "Mulai perjalanan dengan memperhatikan analisis dan rekomendasi dari website",
       icon: <Navigation className="text-white" size={24} />,
-      color: "from-[#3A6D7E] to-[#4C7E8F]"
+      color: "bg-[#3A6D7E]",
+      borderColor: "border-[#3A6D7E]"
     },
     {
       step: 5,
       title: "Berikan Feedback",
       description: "Gunakan menu peta komunitas untuk memberikan feedback berdasarkan penglihatan langsung",
       icon: <Eye className="text-white" size={24} />,
-      color: "from-[#4C7E8F] to-[#5D8FA0]"
+      color: "bg-[#4C7E8F]",
+      borderColor: "border-[#4C7E8F]"
     }
   ];
 
   return (
     <>
       <LayoutNavbar>
-        <div className="space-y-16 md:space-y-24 pt-24 md:pt-28 pb-8 md:pb-12">
-          {/* Hero Section - Enhanced dengan perbaikan mobile */}
-          <section className="relative bg-[#053040] text-white rounded-2xl md:rounded-3xl px-4 sm:px-6 py-16 md:py-20 overflow-hidden shadow-lg mx-3 sm:mx-6 md:mx-auto max-w-6xl">
+        <div className="space-y-16 md:space-y-24 pt-24 md:pt-28 pb-8 md:pb-12 bg-gradient-to-b from-blue-50 to-white">
+          {/* Hero Section - Solid Color */}
+          <section className="bg-[#053040] text-white rounded-2xl md:rounded-3xl px-4 sm:px-6 py-16 md:py-20 overflow-hidden shadow-lg mx-3 sm:mx-6 md:mx-auto max-w-6xl">
             <Image
               src="/signup-bg.png"
               alt="Hero background"
               fill
-              className="absolute inset-0 object-cover opacity-30"
+              className="object-cover opacity-20"
               priority
             />
             <div className="relative z-10 max-w-3xl mx-auto text-center space-y-4 md:space-y-6">
-              <div className="inline-flex items-center gap-2 bg-[#2C5B6B]/80 px-3 py-1.5 md:px-4 md:py-2 rounded-full animate-pulse text-xs md:text-sm">
+              <div className="inline-flex items-center gap-2 bg-[#2C5B6B] px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm">
                 <Waves size={16} className="md:w-5 md:h-5" />
                 <span className="font-medium">Keselamatan Laut Prioritas Kami</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight md:leading-tight animate-fade-in px-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold leading-tight md:leading-tight px-2">
                 Meningkatkan Keselamatan Transportasi Laut dan Kesejahteraan Masyarakat Pesisir
               </h1>
-              <p className="text-sm sm:text-base md:text-lg text-[#C9CFCF] animate-fade-in-delayed px-2 sm:px-0">
+              <p className="text-sm sm:text-base md:text-lg text-blue-100 px-2 sm:px-0">
                 Pelaut Hebat berdedikasi untuk meningkatkan keselamatan dalam transportasi laut dan mendukung kesejahteraan masyarakat pesisir melalui solusi inovatif dan layanan komprehensif.
               </p>
               
               {/* Scroll indicator */}
               <button 
                 onClick={scrollToTestimonials}
-                className="mt-6 md:mt-8 animate-bounce inline-flex flex-col items-center gap-2 text-xs md:text-sm text-[#C9CFCF] hover:text-white transition-colors"
+                className="mt-6 md:mt-8 animate-bounce inline-flex flex-col items-center gap-2 text-xs md:text-sm text-blue-200 hover:text-white transition-colors"
               >
                 <span>Jelajahi Lebih Lanjut</span>
                 <ChevronDown size={16} className="md:w-5 md:h-5" />
@@ -156,19 +161,19 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Cara Penggunaan Website - MODIFIED SECTION dengan perbaikan mobile */}
+          {/* Cara Penggunaan Website */}
           <section className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
             <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Cara Penggunaan Website</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Cara Penggunaan Website</h2>
               <div className="w-16 sm:w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
-              <p className="text-sm sm:text-base text-[#4C5F6B] dark:text-gray-300 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
                 Ikuti langkah-langkah berikut untuk memaksimalkan penggunaan Pelaut Hebat
               </p>
             </div>
 
             <div className="relative">
-              {/* Timeline Connector - MODIFIED dengan main color palette */}
-              <div className="absolute left-4 md:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#053040] via-[#2C5B6B] to-[#4C7E8F] hidden md:block"></div>
+              {/* Timeline Connector */}
+              <div className="absolute left-4 md:left-8 top-0 bottom-0 w-0.5 bg-[#2C5B6B] hidden md:block"></div>
               
               <div className="space-y-6 md:space-y-12">
                 {usageSteps.map((step, index) => (
@@ -176,42 +181,42 @@ export default function DashboardPage() {
                     key={step.step}
                     className="flex flex-col md:flex-row items-start gap-3 md:gap-6 group cursor-pointer"
                   >
-                    {/* Step Number and Icon - MODIFIED untuk mobile */}
+                    {/* Step Number and Icon */}
                     <div className="flex items-center gap-3 md:w-40">
-                      <div className={`relative flex-shrink-0 w-10 h-10 md:w-16 md:h-16 rounded-full bg-gradient-to-br ${step.color} shadow-lg group-hover:scale-105 md:group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`relative flex-shrink-0 w-10 h-10 md:w-16 md:h-16 rounded-full ${step.color} shadow-lg group-hover:scale-105 md:group-hover:scale-110 transition-transform duration-300`}>
                         <div className="absolute inset-0 flex items-center justify-center">
                           {step.icon}
                         </div>
-                        <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-4 h-4 md:w-6 md:h-6 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700">
-                          <span className="text-xs font-bold text-gray-800 dark:text-white">{step.step}</span>
+                        <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-4 h-4 md:w-6 md:h-6 bg-white rounded-full flex items-center justify-center shadow-md border border-gray-200">
+                          <span className="text-xs font-bold text-gray-800">{step.step}</span>
                         </div>
                       </div>
                       
-                      {/* Connector dot for mobile - MODIFIED dengan main colors */}
-                      <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#053040] to-[#2C5B6B] md:hidden"></div>
+                      {/* Connector dot for mobile */}
+                      <div className="w-2 h-2 rounded-full bg-[#2C5B6B] md:hidden"></div>
                     </div>
 
-                    {/* Content - MODIFIED untuk dark mode support dan mobile */}
-                    <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl p-4 md:p-6 shadow-md hover:shadow-lg md:hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 group-hover:border-[#2C5B6B] dark:group-hover:border-[#4C7E8F] ml-0 md:ml-0">
+                    {/* Content */}
+                    <div className="flex-1 bg-white rounded-xl md:rounded-2xl p-4 md:p-6 shadow-md hover:shadow-lg md:hover:shadow-xl transition-all duration-300 border border-gray-100 group-hover:border-[#2C5B6B] ml-0 md:ml-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-bold text-base md:text-lg text-[#053040] dark:text-white mb-2 group-hover:text-[#2C5B6B] dark:group-hover:text-[#4C7E8F] transition-colors">
+                          <h3 className="font-bold text-base md:text-lg text-gray-900 mb-2 group-hover:text-[#2C5B6B] transition-colors">
                             {step.title}
                           </h3>
-                          <p className="text-xs md:text-sm text-[#4C5F6B] dark:text-gray-300 leading-relaxed">
+                          <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
                             {step.description}
                           </p>
                         </div>
                         <div className="ml-2 md:ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-shrink-0">
-                          <Compass className="text-[#2C5B6B] dark:text-[#4C7E8F] w-4 h-4 md:w-5 md:h-5" />
+                          <Compass className="text-[#2C5B6B] w-4 h-4 md:w-5 md:h-5" />
                         </div>
                       </div>
                       
-                      {/* Progress indicator - MODIFIED untuk mobile */}
+                      {/* Progress indicator */}
                       <div className="mt-3 md:mt-4 flex items-center gap-2">
-                        <div className="flex-1 h-1.5 md:h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 md:h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div 
-                            className={`h-full bg-gradient-to-r ${step.color} rounded-full transition-all duration-1000`}
+                            className={`h-full ${step.color} rounded-full transition-all duration-1000`}
                             style={{ 
                               width: step.step === 1 ? '20%' : 
                                      step.step === 2 ? '40%' : 
@@ -220,7 +225,7 @@ export default function DashboardPage() {
                             }}
                           ></div>
                         </div>
-                        <span className="text-xs font-medium text-[#4C5F6B] dark:text-gray-400">
+                        <span className="text-xs font-medium text-gray-500">
                           {step.step}/5
                         </span>
                       </div>
@@ -229,9 +234,9 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* Call to Action - MODIFIED untuk mobile */}
+              {/* Call to Action */}
               <div className="mt-8 md:mt-12 text-center">
-                <div className="inline-flex items-center gap-2 md:gap-3 bg-gradient-to-r from-[#053040] to-[#2C5B6B] text-white px-4 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 md:hover:-translate-y-1">
+                <div className="inline-flex items-center gap-2 md:gap-3 bg-[#053040] text-white px-4 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 md:hover:-translate-y-1 hover:bg-[#2C5B6B]">
                   <Compass size={20} className="md:w-6 md:h-6" />
                   <div className="text-left">
                     <div className="font-semibold text-sm md:text-base">Siap Memulai?</div>
@@ -242,12 +247,12 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Fitur Utama - Enhanced dengan dark mode support dan perbaikan mobile */}
+          {/* Fitur Utama */}
           <section className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
             <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Fitur Utama</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Fitur Utama</h2>
               <div className="w-16 sm:w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
-              <p className="text-sm sm:text-base text-[#4C5F6B] dark:text-gray-300 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
                 Pelaut Hebat menawarkan berbagai fitur yang dirancang untuk meningkatkan keselamatan dan mendukung masyarakat pesisir.
               </p>
             </div>
@@ -256,39 +261,39 @@ export default function DashboardPage() {
                 { 
                   title: 'Manajemen Keselamatan', 
                   desc: 'Protokol keselamatan komprehensif dan alat manajemen risiko untuk operasi maritim.', 
-                  icon: <Shield className="text-[#053040] dark:text-[#2C5B6B] w-6 h-6 md:w-8 md:h-8" />
+                  icon: <Shield className="text-[#053040] w-6 h-6 md:w-8 md:h-8" />
                 },
                 { 
                   title: 'Ringkasan Cuaca', 
                   desc: 'Ringkasan cuaca dan gelombang laut yang disajikan dalam bentuk singkat dan mudah dipahami oleh pengguna hasil dari pengolahan data oleh AI.', 
-                  icon: <Cloud className="text-[#053040] dark:text-[#2C5B6B] w-6 h-6 md:w-8 md:h-8" />
+                  icon: <Cloud className="text-[#053040] w-6 h-6 md:w-8 md:h-8" />
                 },
                 { 
                   title: 'Peta Komunitas', 
                   desc: 'Sistem respons cepat dan efektif untuk keadaan darurat maritim dan panggilan darurat.', 
-                  icon: <Map className="text-[#053040] dark:text-[#2C5B6B] w-6 h-6 md:w-8 md:h-8" />
+                  icon: <Map className="text-[#053040] w-6 h-6 md:w-8 md:h-8" />
                 }
               ].map((item, index) => (
                 <div 
                   key={index} 
-                  className="p-4 md:p-6 border rounded-lg md:rounded-xl shadow-sm bg-white dark:bg-gray-800 hover:shadow-md transition-all duration-300 hover:-translate-y-1 md:hover:-translate-y-2 group cursor-pointer border-gray-200 dark:border-gray-700"
+                  className="p-4 md:p-6 border rounded-lg md:rounded-xl shadow-sm bg-white hover:shadow-md transition-all duration-300 hover:-translate-y-1 md:hover:-translate-y-2 group cursor-pointer border-gray-200"
                 >
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-[#2C5B6B]/10 dark:bg-[#2C5B6B]/20 rounded-full flex items-center justify-center mb-3 md:mb-4 group-hover:bg-[#2C5B6B]/20 dark:group-hover:bg-[#2C5B6B]/30 transition-colors">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-[#2C5B6B]/10 rounded-full flex items-center justify-center mb-3 md:mb-4 group-hover:bg-[#2C5B6B]/20 transition-colors">
                     {item.icon}
                   </div>
-                  <h3 className="font-semibold text-base md:text-lg text-[#053040] dark:text-white mb-1 md:mb-2 group-hover:text-[#2C5B6B] dark:group-hover:text-[#4C7E8F] transition-colors">{item.title}</h3>
-                  <p className="text-xs md:text-sm text-[#4C5F6B] dark:text-gray-300">{item.desc}</p>
+                  <h3 className="font-semibold text-base md:text-lg text-gray-900 mb-1 md:mb-2 group-hover:text-[#2C5B6B] transition-colors">{item.title}</h3>
+                  <p className="text-xs md:text-sm text-gray-600">{item.desc}</p>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Manajemen Keselamatan - Enhanced dengan dark mode dan perbaikan mobile */}
+          {/* Manajemen Keselamatan */}
           <section className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
             <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Manajemen Keselamatan</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Manajemen Keselamatan</h2>
               <div className="w-16 sm:w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
-              <p className="text-sm sm:text-base text-[#4C5F6B] dark:text-gray-300 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
                 Protokol keselamatan komprehensif dan alat manajemen risiko untuk operasi maritim.
               </p>
             </div>
@@ -297,25 +302,25 @@ export default function DashboardPage() {
                 { 
                   title: 'Tips Cuaca Buruk di Laut', 
                   desc: 'Durasi 2 menit',
-                  icon: <AlertTriangle className="text-[#053040] dark:text-[#2C5B6B] w-4 h-4 md:w-5 md:h-5" />,
+                  icon: <AlertTriangle className="text-[#053040] w-4 h-4 md:w-5 md:h-5" />,
                   image: '/cuaca.jpg'
                 },
                 { 
                   title: '5 Alat Keselamatan Wajib', 
                   desc: 'Panduan alat pelindung dasar di kapal',
-                  icon: <Shield className="text-[#053040] dark:text-[#2C5B6B] w-4 h-4 md:w-5 md:h-5" />,
+                  icon: <Shield className="text-[#053040] w-4 h-4 md:w-5 md:h-5" />,
                   image: '/alat-keselamatan.jpeg'
                 },
                 { 
                   title: 'Kode Warna Bendera Laut', 
                   desc: 'Pelajari arti bendera di laut',
-                  icon: <Flag className="text-[#053040] dark:text-[#2C5B6B] w-4 h-4 md:w-5 md:h-5" />,
+                  icon: <Flag className="text-[#053040] w-4 h-4 md:w-5 md:h-5" />,
                   image: '/arti-bendera.jpg'
                 }
               ].map((item, i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-gray-800 rounded-lg md:rounded-xl overflow-hidden border shadow-md hover:shadow-lg md:hover:shadow-xl transition-all duration-300 group cursor-pointer hover:-translate-y-0.5 md:hover:-translate-y-1 border-gray-200 dark:border-gray-700"
+                  className="bg-white rounded-lg md:rounded-xl overflow-hidden border shadow-md hover:shadow-lg md:hover:shadow-xl transition-all duration-300 group cursor-pointer hover:-translate-y-0.5 md:hover:-translate-y-1 border-gray-200"
                 >
                   <div className="relative h-32 sm:h-36 md:h-48 overflow-hidden">
                     <Image
@@ -329,11 +334,11 @@ export default function DashboardPage() {
                   <div className="p-3 md:p-5">
                     <div className="flex items-center gap-2 mb-1 md:mb-2">
                       {item.icon}
-                      <h4 className="font-semibold text-[#053040] dark:text-white text-sm md:text-base group-hover:text-[#2C5B6B] dark:group-hover:text-[#4C7E8F] transition-colors">
+                      <h4 className="font-semibold text-gray-900 text-sm md:text-base group-hover:text-[#2C5B6B] transition-colors">
                         {item.title}
                       </h4>
                     </div>
-                    <p className="text-xs md:text-sm text-[#628696] dark:text-gray-400">
+                    <p className="text-xs md:text-sm text-gray-600">
                       {item.desc}
                     </p>
                   </div>
@@ -342,19 +347,19 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Enhanced Ringkasan Cuaca & Gelombang dengan Lokasi Terkini - dengan perbaikan mobile */}
+          {/* Ringkasan Cuaca & Gelombang */}
           <section className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
             <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Ringkasan Cuaca & Gelombang Laut</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Ringkasan Cuaca & Gelombang Laut</h2>
               <div className="w-16 sm:w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
-              <p className="text-sm sm:text-base text-[#4C5F6B] dark:text-gray-300 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
                 Informasi terkini tentang kondisi laut yang disajikan secara jelas dan mudah dipahami.
               </p>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-              {/* Lokasi Terkini Card - Enhanced dengan dark mode dan perbaikan mobile */}
-              <div className="bg-gradient-to-br from-[#053040] to-[#2C5B6B] rounded-xl md:rounded-2xl shadow-lg overflow-hidden text-white hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 md:hover:-translate-y-1">
+              {/* Lokasi Terkini Card */}
+              <div className="bg-[#053040] rounded-xl md:rounded-2xl shadow-lg overflow-hidden text-white hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 md:hover:-translate-y-1">
                 <div className="p-4 md:p-6">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4 md:mb-6">
@@ -428,23 +433,23 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              {/* Recommendation Card - Enhanced dengan dark mode dan perbaikan mobile */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl shadow-lg overflow-hidden border border-[#E5E7EB] dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 md:hover:-translate-y-1">
+              {/* Recommendation Card */}
+              <div className="bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 md:hover:-translate-y-1">
                 <div className="p-4 md:p-6">
                   {/* Notes: Data Dummy */}
-                  <p className="text-xs text-[#4C5F6B] dark:text-gray-400 italic mb-3 md:mb-4">
+                  <p className="text-xs text-gray-500 italic mb-3 md:mb-4">
                     *Data berikut merupakan contoh hasil analisis (dummy data).
                   </p>
 
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4 md:mb-6">
                     <div className="flex items-center gap-2 md:gap-3">
-                      <div className="p-1.5 md:p-2 bg-[#053040]/10 dark:bg-[#2C5B6B]/20 rounded-lg">
-                        <Waves className="text-[#053040] dark:text-[#2C5B6B] w-4 h-4 md:w-5 md:h-5" />
+                      <div className="p-1.5 md:p-2 bg-[#053040]/10 rounded-lg">
+                        <Waves className="text-[#053040] w-4 h-4 md:w-5 md:h-5" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-base md:text-lg text-[#053040] dark:text-white">Analisis Kondisi Laut</h4>
-                        <p className="text-xs md:text-sm text-[#4C5F6B] dark:text-gray-400">Rekomendasi pelayaran</p>
+                        <h4 className="font-semibold text-base md:text-lg text-gray-900">Analisis Kondisi Laut</h4>
+                        <p className="text-xs md:text-sm text-gray-500">Rekomendasi pelayaran</p>
                       </div>
                     </div>
                     <div className="w-2 h-2 md:w-3 md:h-3 bg-red-400 rounded-full animate-pulse"></div>
@@ -452,54 +457,54 @@ export default function DashboardPage() {
 
                   {/* Metrics Grid */}
                   <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
-                    <div className="bg-[#F8FAFC] dark:bg-gray-700 rounded-lg p-2 md:p-3 border border-[#E5E7EB] dark:border-gray-600 hover:border-[#2C5B6B] dark:hover:border-[#4C7E8F] transition-colors group">
+                    <div className="bg-blue-50 rounded-lg p-2 md:p-3 border border-blue-100 hover:border-[#2C5B6B] transition-colors group">
                       <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-2">
-                        <Waves size={14} className="md:w-4 md:h-4 text-[#053040] dark:text-[#2C5B6B]" />
-                        <span className="text-xs font-medium text-[#4C5F6B] dark:text-gray-300">Tinggi Gelombang</span>
+                        <Waves size={14} className="md:w-4 md:h-4 text-[#053040]" />
+                        <span className="text-xs font-medium text-gray-600">Tinggi Gelombang</span>
                       </div>
-                      <div className="text-lg md:text-xl font-bold text-[#053040] dark:text-white">1.96m</div>
+                      <div className="text-lg md:text-xl font-bold text-gray-900">1.96m</div>
                       <div className="text-xs text-red-500 font-medium mt-1">Tinggi</div>
                     </div>
                     
-                    <div className="bg-[#F8FAFC] dark:bg-gray-700 rounded-lg p-2 md:p-3 border border-[#E5E7EB] dark:border-gray-600 hover:border-[#2C5B6B] dark:hover:border-[#4C7E8F] transition-colors group">
+                    <div className="bg-blue-50 rounded-lg p-2 md:p-3 border border-blue-100 hover:border-[#2C5B6B] transition-colors group">
                       <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-2">
-                        <Gauge size={14} className="md:w-4 md:h-4 text-[#053040] dark:text-[#2C5B6B]" />
-                        <span className="text-xs font-medium text-[#4C5F6B] dark:text-gray-300">Periode</span>
+                        <Gauge size={14} className="md:w-4 md:h-4 text-[#053040]" />
+                        <span className="text-xs font-medium text-gray-600">Periode</span>
                       </div>
-                      <div className="text-lg md:text-xl font-bold text-[#053040] dark:text-white">11.5s</div>
+                      <div className="text-lg md:text-xl font-bold text-gray-900">11.5s</div>
                       <div className="text-xs text-yellow-500 font-medium mt-1">Sedang</div>
                     </div>
                   </div>
 
                   {/* Analysis */}
                   <div className="space-y-3 md:space-y-4">
-                    <div className="flex items-start gap-2 md:gap-3 group hover:bg-[#F8FAFC] dark:hover:bg-gray-700 p-2 md:p-3 rounded-lg transition-colors">
+                    <div className="flex items-start gap-2 md:gap-3 group hover:bg-blue-50 p-2 md:p-3 rounded-lg transition-colors">
                       <div className="flex-shrink-0 mt-0.5 md:mt-1">
-                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#053040] dark:bg-[#2C5B6B] rounded-full group-hover:scale-110 md:group-hover:scale-125 transition-transform"></div>
+                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#053040] rounded-full group-hover:scale-110 md:group-hover:scale-125 transition-transform"></div>
                       </div>
-                      <p className="text-xs md:text-sm text-[#4C5F6B] dark:text-gray-300 leading-relaxed">
-                        Tinggi gelombang <span className="font-semibold text-[#053040] dark:text-white">1,96 meter</span> berisiko untuk kapal tradisional.
+                      <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
+                        Tinggi gelombang <span className="font-semibold text-gray-900">1,96 meter</span> berisiko untuk kapal tradisional.
                       </p>
                     </div>
                     
-                    <div className="flex items-start gap-2 md:gap-3 group hover:bg-[#F8FAFC] dark:hover:bg-gray-700 p-2 md:p-3 rounded-lg transition-colors">
+                    <div className="flex items-start gap-2 md:gap-3 group hover:bg-blue-50 p-2 md:p-3 rounded-lg transition-colors">
                       <div className="flex-shrink-0 mt-0.5 md:mt-1">
-                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#053040] dark:bg-[#2C5B6B] rounded-full group-hover:scale-110 md:group-hover:scale-125 transition-transform"></div>
+                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#053040] rounded-full group-hover:scale-110 md:group-hover:scale-125 transition-transform"></div>
                       </div>
-                      <p className="text-xs md:text-sm text-[#4C5F6B] dark:text-gray-300 leading-relaxed">
-                        Periode <span className="font-semibold text-[#053040] dark:text-white">11,5 detik</span> menunjukkan gelombang besar dengan jarak jauh.
+                      <p className="text-xs md:text-sm text-gray-600 leading-relaxed">
+                        Periode <span className="font-semibold text-gray-900">11,5 detik</span> menunjukkan gelombang besar dengan jarak jauh.
                       </p>
                     </div>
                   </div>
 
                   {/* Warning Box */}
-                  <div className="mt-4 md:mt-6 p-3 md:p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500 hover:border-red-600 transition-colors">
+                  <div className="mt-4 md:mt-6 p-3 md:p-4 bg-red-50 rounded-lg border-l-4 border-red-500 hover:border-red-600 transition-colors">
                     <div className="flex items-start gap-2 md:gap-3">
                       <AlertTriangle className="text-red-500 flex-shrink-0 mt-0.5 w-4 h-4 md:w-5 md:h-5" />
                       <div>
-                        <p className="font-medium text-red-800 dark:text-red-200 text-xs md:text-sm mb-1">Peringatan Keselamatan</p>
-                        <p className="text-xs md:text-sm text-red-700 dark:text-red-300 leading-relaxed">
-                          Kondisi <span className="font-semibold">tidak aman</span> untuk pelayaran. Disarankan menunda hingga pukul <span className="font-semibold text-green-600 dark:text-green-400">12.30</span>.
+                        <p className="font-medium text-red-800 text-xs md:text-sm mb-1">Peringatan Keselamatan</p>
+                        <p className="text-xs md:text-sm text-red-700 leading-relaxed">
+                          Kondisi <span className="font-semibold">tidak aman</span> untuk pelayaran. Disarankan menunda hingga pukul <span className="font-semibold text-green-600">12.30</span>.
                         </p>
                       </div>
                     </div>
@@ -507,10 +512,10 @@ export default function DashboardPage() {
                 </div>
                 
                 {/* Footer */}
-                <div className="bg-[#F8FAFC] dark:bg-gray-700 px-4 md:px-6 py-3 md:py-4 border-t border-[#E5E7EB] dark:border-gray-600">
-                  <div className="flex items-center justify-between text-xs md:text-sm text-[#4C5F6B] dark:text-gray-400">
+                <div className="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between text-xs md:text-sm text-gray-500">
                     <div className="flex items-center gap-1 md:gap-2">
-                      <Cloud size={14} className="md:w-4 md:h-4 text-[#2C5B6B] dark:text-[#4C7E8F]" />
+                      <Cloud size={14} className="md:w-4 md:h-4 text-[#2C5B6B]" />
                       <span>Update berikutnya</span>
                     </div>
                     <span className="font-medium">11:30 AM</span>
@@ -520,12 +525,12 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Testimoni - Enhanced dengan carousel dan dark mode serta perbaikan mobile */}
+          {/* Testimoni */}
           <section ref={testimonialRef} className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
             <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Apa Kata Mereka</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Apa Kata Mereka</h2>
               <div className="w-16 sm:w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
-              <p className="text-sm sm:text-base text-[#4C5F6B] dark:text-gray-300 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-3 md:mt-4 max-w-2xl mx-auto px-2">
                 Testimoni dari pengguna setia Pelaut Hebat
               </p>
             </div>
@@ -541,14 +546,14 @@ export default function DashboardPage() {
                   {testimonials.map((testimonial, i) => (
                     <div
                       key={i}
-                      className="w-full flex-shrink-0 bg-white dark:bg-gray-800 border rounded-xl md:rounded-2xl shadow-md p-4 md:p-8 relative overflow-hidden hover:shadow-lg transition-shadow border-gray-200 dark:border-gray-700"
+                      className="w-full flex-shrink-0 bg-white border rounded-xl md:rounded-2xl shadow-md p-4 md:p-8 relative overflow-hidden hover:shadow-lg transition-shadow border-gray-200"
                     >
-                      <Quote className="absolute top-4 right-4 md:top-6 md:right-6 text-[#053040]/10 dark:text-gray-600 w-8 h-8 md:w-16 md:h-16" />
+                      <Quote className="absolute top-4 right-4 md:top-6 md:right-6 text-gray-200 w-8 h-8 md:w-16 md:h-16" />
                       <div className="relative z-10">
-                        <p className="text-sm md:text-lg text-[#053040] dark:text-white leading-relaxed mb-4 md:mb-6">
+                        <p className="text-sm md:text-lg text-gray-900 leading-relaxed mb-4 md:mb-6">
                           {testimonial.quote}
                         </p>
-                        <div className="text-xs md:text-base text-[#053040] dark:text-gray-300 italic font-semibold">
+                        <div className="text-xs md:text-base text-gray-700 italic font-semibold">
                           {testimonial.author}
                         </div>
                       </div>
@@ -561,7 +566,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-center gap-3 md:gap-4 mt-6 md:mt-8">
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="p-1.5 md:p-2 rounded-full bg-[#053040] dark:bg-[#2C5B6B] text-white hover:bg-[#2C5B6B] dark:hover:bg-[#4C7E8F] transition-colors"
+                  className="p-1.5 md:p-2 rounded-full bg-[#053040] text-white hover:bg-[#2C5B6B] transition-colors"
                 >
                   {isPlaying ? <Pause size={16} className="md:w-5 md:h-5" /> : <Play size={16} className="md:w-5 md:h-5" />}
                 </button>
@@ -573,7 +578,7 @@ export default function DashboardPage() {
                       key={i}
                       onClick={() => setCurrentSlide(i)}
                       className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all ${
-                        i === currentSlide ? 'bg-[#053040] dark:bg-[#2C5B6B]' : 'bg-[#2C5B6B]/30 dark:bg-gray-600'
+                        i === currentSlide ? 'bg-[#053040]' : 'bg-gray-300'
                       }`}
                     />
                   ))}
@@ -601,79 +606,6 @@ export default function DashboardPage() {
         }
         .animate-fade-in-delayed {
           animation: fade-in-delayed 1.5s ease-out;
-        }
-
-        /* Mobile-specific improvements */
-        @media (max-width: 400px) {
-          .text-2xl {
-            font-size: 1.5rem;
-            line-height: 2rem;
-          }
-          
-          .text-lg {
-            font-size: 1.125rem;
-            line-height: 1.75rem;
-          }
-          
-          .text-base {
-            font-size: 1rem;
-            line-height: 1.5rem;
-          }
-          
-          .text-sm {
-            font-size: 0.875rem;
-            line-height: 1.25rem;
-          }
-          
-          .text-xs {
-            font-size: 0.75rem;
-            line-height: 1rem;
-          }
-          
-          .p-4 {
-            padding: 1rem;
-          }
-          
-          .p-3 {
-            padding: 0.75rem;
-          }
-          
-          .gap-4 {
-            gap: 1rem;
-          }
-          
-          .gap-3 {
-            gap: 0.75rem;
-          }
-          
-          .rounded-xl {
-            border-radius: 0.75rem;
-          }
-          
-          .rounded-lg {
-            border-radius: 0.5rem;
-          }
-        }
-
-        /* iPhone 6s specific fixes */
-        @media (max-width: 375px) {
-          .space-y-16 > * + * {
-            margin-top: 3rem;
-          }
-          
-          .pt-24 {
-            padding-top: 5rem;
-          }
-          
-          .mx-3 {
-            margin-left: 0.75rem;
-            margin-right: 0.75rem;
-          }
-          
-          .px-3 {
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-          }
         }
       `}</style>
     </>

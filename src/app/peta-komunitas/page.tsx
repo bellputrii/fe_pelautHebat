@@ -121,8 +121,8 @@ export default function MyCommunitiesPage() {
   };
 
   const renderCommunityCard = (community: Community, isMyCommunity: boolean) => (
-    <div key={community.id} className="border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition">
-      <div className="h-32 bg-gradient-to-r from-blue-500 to-teal-400 flex items-center justify-center">
+    <div key={community.id} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition bg-white">
+      <div className="h-32 bg-blue-500 flex items-center justify-center">
         {community.banner_url ? (
           <img 
             src={community.banner_url} 
@@ -161,20 +161,20 @@ export default function MyCommunitiesPage() {
           {community.tags.map((tag) => (
             <span 
               key={tag} 
-              className="bg-[#eaf9fd] text-[#053040] px-3 py-1 rounded-full text-xs"
+              className="bg-blue-50 text-[#053040] px-3 py-1 rounded-full text-xs border border-blue-100"
             >
               {tag.replace(/_/g, ' ')}
             </span>
           ))}
         </div>
 
-        <div className="flex items-center justify-between text-sm text-[#5c7893] border-t pt-4">
+        <div className="flex items-center justify-between text-sm text-[#5c7893] border-t border-gray-200 pt-4">
           <div className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
+            <Users className="h-4 w-4 text-[#5c7893]" />
             <span>{community.member_count} Anggota</span>
           </div>
           <div className="flex items-center gap-1">
-            <MessageSquare className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4 text-[#5c7893]" />
             <span>{community.statistics.total_posts} Diskusi</span>
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function MyCommunitiesPage() {
             disabled={loadingCommunity === community.id}
             className={`w-full ${
               isMyCommunity || community.is_member
-                ? 'bg-green-500 hover:bg-green-600' 
+                ? 'bg-green-600 hover:bg-green-700' 
                 : 'bg-[#053040] hover:bg-[#2C5B6B]'
             } text-white py-2 rounded-lg transition-colors flex items-center justify-center ${
               loadingCommunity === community.id ? 'opacity-75' : ''
@@ -193,14 +193,14 @@ export default function MyCommunitiesPage() {
           >
             {loadingCommunity === community.id ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="h-4 w-4 text-white animate-spin mr-2" />
                 Memproses...
               </>
             ) : (
               <>
                 {(isMyCommunity || community.is_member) ? (
                   <>
-                    <Check className="h-4 w-4 mr-2" />
+                    <Check className="h-4 w-4 text-white mr-2" />
                     Masuk Komunitas
                   </>
                 ) : (
@@ -219,7 +219,10 @@ export default function MyCommunitiesPage() {
       <LayoutNavbar>
         <div className="min-h-screen pt-20 p-8 bg-white max-w-7xl mx-auto">
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
+              <p className="text-gray-600">Memuat komunitas...</p>
+            </div>
           </div>
         </div>
       </LayoutNavbar>
@@ -230,15 +233,15 @@ export default function MyCommunitiesPage() {
     return (
       <LayoutNavbar>
         <div className="min-h-screen pt-20 p-8 bg-white max-w-7xl mx-auto">
-          <div className="bg-red-100 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
             <div className="flex items-center">
-              <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+              <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
               <p className="text-red-700">{error}</p>
             </div>
           </div>
           <button
             onClick={() => window.location.reload()}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Muat Ulang
           </button>
@@ -261,13 +264,13 @@ export default function MyCommunitiesPage() {
           </div>
 
           {!showAllCommunities && communities.length === 0 ? (
-            <div className="bg-gray-100 rounded-lg p-8 text-center">
+            <div className="bg-gray-50 rounded-lg p-8 text-center border border-gray-200">
               <p className="text-gray-600 mb-4">Anda belum bergabung dengan komunitas apapun</p>
               <button
                 onClick={() => setShowAllCommunities(true)}
                 className="bg-[#053040] text-white px-6 py-2 rounded-lg hover:bg-[#2C5B6B] transition-colors flex items-center gap-2 mx-auto"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-5 w-5 text-white" />
                 Lihat Semua Komunitas
               </button>
             </div>
@@ -277,9 +280,8 @@ export default function MyCommunitiesPage() {
                 {showAllCommunities ? (
                   <button
                     onClick={() => setShowAllCommunities(false)}
-                    className="bg-[#053040] text-white px-6 py-2 rounded-lg hover:bg-[#2C5B6B]"
+                    className="bg-[#053040] text-white px-6 py-2 rounded-lg hover:bg-[#2C5B6B] transition-colors flex items-center gap-2"
                   >
-                    {/* <ArrowLeft className="h-5 w-5" /> */}
                     Kembali ke Komunitas Saya
                   </button>
                 ) : (
@@ -287,7 +289,7 @@ export default function MyCommunitiesPage() {
                     onClick={() => setShowAllCommunities(true)}
                     className="bg-[#053040] text-white px-4 py-2 rounded-lg hover:bg-[#2C5B6B] transition-colors flex items-center gap-2"
                   >
-                    <Search className="h-5 w-5" />
+                    <Search className="h-5 w-5 text-white" />
                     Lihat Semua Komunitas
                   </button>
                 )}

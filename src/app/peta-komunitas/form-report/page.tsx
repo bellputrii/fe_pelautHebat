@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { AlertTriangle, CheckCircle, X, Plus } from 'lucide-react';
+import { AlertTriangle, CheckCircle, X, Plus, Waves, Info, Loader2, ChevronRight, MapPin, Cloud, Gauge, Navigation, Clock, Users, Route, Calendar } from 'lucide-react';
 import LayoutNavbar from '@/components/LayoutNavbar';
 import Footer from '@/components/Footer';
 import { auth } from '@/firebase/config';
@@ -31,6 +31,17 @@ type FormErrors = {
   general?: string;
 };
 
+// Tooltip component
+const Tooltip = ({ text }: { text: string }) => (
+  <div className="group relative inline-flex items-center">
+    <Info className="w-4 h-4 text-gray-400 ml-1 cursor-help" />
+    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+      {text}
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+    </div>
+  </div>
+);
+
 function CommunityReportFormContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -52,15 +63,15 @@ function CommunityReportFormContent() {
 
   const [authError, setAuthError] = useState('');
 
-  // Form states
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [address, setAddress] = useState('');
-  const [areaName, setAreaName] = useState('');
+  // Form states dengan default values
+  const [title, setTitle] = useState('Laporan Kondisi Laut');
+  const [description, setDescription] = useState('Kondisi laut saat ini dalam keadaan normal, cocok untuk aktivitas pelayaran');
+  const [address, setAddress] = useState('Perairan sekitar lokasi komunitas');
+  const [areaName, setAreaName] = useState('Area Perairan Komunitas');
   const [latitude, setLatitude] = useState(-5.8);
   const [longitude, setLongitude] = useState(106.5);
   
-  // Conditions
+  // Conditions dengan default values
   const [waveHeight, setWaveHeight] = useState(0.8);
   const [windSpeed, setWindSpeed] = useState(12);
   const [windDirection, setWindDirection] = useState(90);
@@ -70,7 +81,7 @@ function CommunityReportFormContent() {
   const [currentStrength, setCurrentStrength] = useState(1);
   const [tideLevel, setTideLevel] = useState<TideLevel>('medium');
   
-  // Safety Assessment
+  // Safety Assessment dengan default values
   const [overallSafety, setOverallSafety] = useState<SafetyLevel>('safe');
   const [boatRecommendations, setBoatRecommendations] = useState({
     perahu_kecil: 'safe' as SafetyLevel,
@@ -79,12 +90,13 @@ function CommunityReportFormContent() {
   });
   const [recommendedActions, setRecommendedActions] = useState([
     'Tetap gunakan pelampung keselamatan',
-    'Manfaatkan kondisi baik untuk aktivitas memancing'
+    'Periksa kondisi perahu sebelum berlayar',
+    'Bawa alat komunikasi yang memadai'
   ]);
   const [newAction, setNewAction] = useState('');
   
-  // Tags and urgency
-  const [tags, setTags] = useState(['cuaca_cerah', 'kondisi_baik']);
+  // Tags and urgency dengan default values
+  const [tags, setTags] = useState(['kondisi_normal', 'cuaca_cerah', 'aman_berlayar']);
   const [newTag, setNewTag] = useState('');
   const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>('low');
   
@@ -229,13 +241,13 @@ function CommunityReportFormContent() {
 
       const reportData = {
         community_id: communityId,
-        title: title || "Laporan Kondisi Laut",
-        description: description || "Tidak ada deskripsi",
+        title: title,
+        description: description,
         location: {
           latitude: Number(latitude),
           longitude: Number(longitude),
-          address: address || "Lokasi tidak ditentukan",
-          area_name: areaName || "Area tidak ditentukan"
+          address: address,
+          area_name: areaName
         },
         conditions: {
           wave_height: Number(waveHeight),
@@ -302,7 +314,7 @@ function CommunityReportFormContent() {
     
     return (
       <div className="mt-1 flex items-center text-red-500 text-sm">
-        <AlertTriangle className="h-4 w-4 mr-1" />
+        <AlertTriangle className="h-4 w-4 mr-1 text-red-500" />
         <span>{message}</span>
       </div>
     );
@@ -312,7 +324,7 @@ function CommunityReportFormContent() {
     return (
       <LayoutNavbar>
         <div className="min-h-screen pt-20 p-4 max-w-4xl mx-auto">
-          <div className="bg-red-100 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-start">
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-start">
             <AlertTriangle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-red-700 font-medium">{error}</p>
@@ -332,405 +344,570 @@ function CommunityReportFormContent() {
   return (
     <>
       <LayoutNavbar>
-        <div className="min-h-screen pt-20 bg-gray-50">
-          <div className="max-w-4xl mx-auto p-4">
-            <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-800">Buat Laporan Baru</h1>
-              <p className="text-gray-600">Komunitas: {decodeURIComponent(communityName || '')}</p>
+        <main className="min-h-screen pt-20 p-4 md:p-8 bg-white max-w-7xl mx-auto">
+          <div className="container mx-auto px-2 md:px-4 py-8 md:py-12 max-w-4xl">
+            {/* Header Section */}
+            <div className="text-center mb-8 md:mb-10">
+              <div className="inline-flex items-center justify-center bg-blue-100 p-3 rounded-full mb-4">
+                <Waves className="w-6 h-6 text-blue-600" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-blue-900 mb-3">
+                Laporan Kondisi Laut
+              </h1>
+              <p className="text-gray-600 max-w-lg mx-auto text-sm md:text-base">
+                Laporkan kondisi terkini laut untuk keselamatan bersama komunitas {decodeURIComponent(communityName || '')}
+              </p>
             </div>
 
-            {success && (
-              <div className="bg-green-100 border-l-4 border-green-500 p-4 mb-6 rounded-lg flex items-start">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+            {/* Info Box */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-green-700 font-medium">{success}</p>
-                  <p className="text-green-600 text-sm mt-1">Laporan Anda telah berhasil dikirim dan akan segera diproses.</p>
-                </div>
-              </div>
-            )}
-
-            {(error || authError) && (
-              <div className="bg-red-100 border-l-4 border-red-500 p-4 mb-6 rounded-lg flex items-start">
-                <AlertTriangle className="h-5 w-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-red-700 font-medium">{error || authError}</p>
-                  {authError && (
-                    <button
-                      onClick={() => router.push('/login')}
-                      className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-                    >
-                      Klik di sini untuk login
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Information */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h2 className="text-lg font-semibold mb-4">Informasi Dasar</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Judul Laporan*</label>
-                    <input
-                      type="text"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Contoh: Cuaca Cerah - Kondisi Ideal untuk Berlayar"
-                      className={`w-full px-3 py-2 border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.title} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi*</label>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={4}
-                      className={`w-full px-3 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      placeholder="Deskripsikan kondisi secara detail..."
-                      required
-                    />
-                    <div className="flex justify-between items-center mt-1">
-                      <ErrorMessage message={errors.description} />
-                      <span className={`text-xs ${description.length < 20 ? 'text-red-500' : 'text-gray-500'}`}>
-                        {description.length}/1000 karakter
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tingkat Urgensi*</label>
-                    <div className="flex space-x-4">
-                      {(['low', 'medium', 'high'] as UrgencyLevel[]).map((level) => (
-                        <label key={level} className="flex items-center">
-                          <input
-                            type="radio"
-                            checked={urgencyLevel === level}
-                            onChange={() => setUrgencyLevel(level)}
-                            className="mr-2"
-                            required
-                          />
-                          <span>{urgencyLevelLabels[level]}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Location Information */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h2 className="text-lg font-semibold mb-4">Lokasi</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Alamat*</label>
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className={`w-full px-3 py-2 border ${errors.address ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      placeholder="Contoh: Kepulauan Seribu, DKI Jakarta"
-                      required
-                    />
-                    <ErrorMessage message={errors.address} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nama Area*</label>
-                    <input
-                      type="text"
-                      value={areaName}
-                      onChange={(e) => setAreaName(e.target.value)}
-                      className={`w-full px-3 py-2 border ${errors.areaName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      placeholder="Contoh: Perairan Kepulauan Seribu"
-                      required
-                    />
-                    <ErrorMessage message={errors.areaName} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Latitude*</label>
-                    <input
-                      type="number"
-                      step="0.000001"
-                      value={latitude}
-                      onChange={(e) => setLatitude(Number(e.target.value))}
-                      className={`w-full px-3 py-2 border ${errors.latitude ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.latitude} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Longitude*</label>
-                    <input
-                      type="number"
-                      step="0.000001"
-                      value={longitude}
-                      onChange={(e) => setLongitude(Number(e.target.value))}
-                      className={`w-full px-3 py-2 border ${errors.longitude ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.longitude} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Conditions */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h2 className="text-lg font-semibold mb-4">Kondisi Laut</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tinggi Gelombang (m)*</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={waveHeight}
-                      onChange={(e) => setWaveHeight(Number(e.target.value))}
-                      className={`w-full px-3 py-2 border ${errors.waveHeight ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.waveHeight} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Kecepatan Angin (km/jam)*</label>
-                    <input
-                      type="number"
-                      value={windSpeed}
-                      onChange={(e) => setWindSpeed(Number(e.target.value))}
-                      className={`w-full px-3 py-2 border ${errors.windSpeed ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.windSpeed} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Arah Angin (derajat)*</label>
-                    <input
-                      type="number"
-                      value={windDirection}
-                      onChange={(e) => setWindDirection(Number(e.target.value))}
-                      className={`w-full px-3 py-2 border ${errors.windDirection ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.windDirection} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Visibilitas (km)*</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={visibility}
-                      onChange={(e) => setVisibility(Number(e.target.value))}
-                      className={`w-full px-3 py-2 border ${errors.visibility ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.visibility} />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi Cuaca*</label>
-                    <input
-                      type="text"
-                      value={weatherDescription}
-                      onChange={(e) => setWeatherDescription(e.target.value)}
-                      className={`w-full px-3 py-2 border ${errors.weatherDescription ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.weatherDescription} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Suhu Laut (°C)*</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={seaTemperature}
-                      onChange={(e) => setSeaTemperature(Number(e.target.value))}
-                      className={`w-full px-3 py-2 border ${errors.seaTemperature ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.seaTemperature} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Kekuatan Arus*</label>
-                    <input
-                      type="number"
-                      value={currentStrength}
-                      onChange={(e) => setCurrentStrength(Number(e.target.value))}
-                      className={`w-full px-3 py-2 border ${errors.currentStrength ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      required
-                    />
-                    <ErrorMessage message={errors.currentStrength} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tinggi Pasang*</label>
-                    <select
-                      value={tideLevel}
-                      onChange={(e) => setTideLevel(e.target.value as TideLevel)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="low">Rendah</option>
-                      <option value="medium">Sedang</option>
-                      <option value="high">Tinggi</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Safety Assessment */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h2 className="text-lg font-semibold mb-4">Penilaian Keselamatan</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tingkat Keselamatan Keseluruhan*</label>
-                    <div className="flex space-x-4">
-                      {(['safe', 'caution', 'danger'] as SafetyLevel[]).map((level) => (
-                        <label key={level} className="flex items-center">
-                          <input
-                            type="radio"
-                            checked={overallSafety === level}
-                            onChange={() => setOverallSafety(level)}
-                            className="mr-2"
-                            required
-                          />
-                          <span>{safetyLevelLabels[level]}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Rekomendasi untuk Kapal*</label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {(['perahu_kecil', 'kapal_nelayan', 'kapal_besar'] as BoatType[]).map((boatType) => (
-                        <div key={boatType} className="border p-3 rounded">
-                          <h3 className="font-medium mb-2">
-                            {boatType === 'perahu_kecil' && 'Perahu Kecil'}
-                            {boatType === 'kapal_nelayan' && 'Kapal Nelayan'}
-                            {boatType === 'kapal_besar' && 'Kapal Besar'}
-                          </h3>
-                          <div className="space-y-2">
-                            {(['safe', 'caution', 'danger'] as SafetyLevel[]).map((level) => (
-                              <label key={level} className="flex items-center">
-                                <input
-                                  type="radio"
-                                  name={boatType}
-                                  checked={boatRecommendations[boatType] === level}
-                                  onChange={() => handleBoatRecommendationChange(boatType, level)}
-                                  className="mr-2"
-                                  required
-                                />
-                                <span>{safetyLevelLabels[level]}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tindakan yang Direkomendasikan</label>
-                    <div className="space-y-2">
-                      {recommendedActions.map((action, index) => (
-                        <div key={index} className="flex justify-between items-center bg-gray-50 p-2 rounded">
-                          <span>{action}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveAction(action)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      ))}
-                      <div className="flex mt-2">
-                        <input
-                          type="text"
-                          value={newAction}
-                          onChange={(e) => setNewAction(e.target.value)}
-                          placeholder="Tambah tindakan baru"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddAction}
-                          className="bg-blue-500 text-white px-3 py-2 rounded-r-md hover:bg-blue-600"
-                        >
-                          <Plus size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h2 className="text-lg font-semibold mb-4">Tag</h2>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag, index) => (
-                      <div key={index} className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
-                        <span>{tag}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTag(tag)}
-                          className="ml-2 text-red-500 hover:text-red-700"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex">
-                    <input
-                      type="text"
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="Tambah tag baru (contoh: kondisi_baik)"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddTag}
-                      className="bg-blue-500 text-white px-3 py-2 rounded-r-md hover:bg-blue-600"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    Tag akan otomatis diubah menjadi huruf kecil dan spasi diganti dengan underscore (_)
+                  <h3 className="font-medium text-blue-900 text-sm mb-1">
+                    Informasi Penting
+                  </h3>
+                  <p className="text-blue-700 text-xs">
+                    Form ini telah diisi dengan nilai default berdasarkan kondisi normal. Pastikan untuk menyesuaikan dengan kondisi aktual sebelum mengirim laporan.
                   </p>
                 </div>
               </div>
+            </div>
 
-              {/* Submit Button */}
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={() => router.push(`/peta-komunitas/reports?communityId=${communityId}&communityName=${encodeURIComponent(communityName || '')}`)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 flex items-center justify-center"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Mengirim...
-                    </>
-                  ) : 'Kirim Laporan'}
-                </button>
+            {/* Success Message */}
+            {success && (
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg mb-6 md:mb-8 flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-medium text-green-800">Berhasil!</h3>
+                  <p className="text-sm text-green-700">{success}</p>
+                </div>
               </div>
-            </form>
+            )}
+
+            {/* Error Message */}
+            {(error || authError) && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6 md:mb-8 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-medium text-red-800">Perhatian</h3>
+                  <p className="text-sm text-red-700">{error || authError}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Form Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-6">
+                {/* Informasi Dasar */}
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-blue-900 flex items-center gap-2">
+                    <Navigation className="w-5 h-5" />
+                    Informasi Dasar
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Judul Laporan
+                        <Tooltip text="Judul yang jelas dan deskriptif tentang kondisi laut" />
+                      </label>
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className={`w-full px-3 md:px-4 py-2 border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                        required
+                      />
+                      <ErrorMessage message={errors.title} />
+                      <p className="text-xs text-gray-500">
+                        Contoh: "Cuaca Cerah - Kondisi Ideal untuk Berlayar"
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        <Gauge className="w-4 h-4" />
+                        Tingkat Urgensi
+                      </label>
+                      <select
+                        value={urgencyLevel}
+                        onChange={(e) => setUrgencyLevel(e.target.value as UrgencyLevel)}
+                        className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                        required
+                      >
+                        <option value="low">Rendah (Kondisi Normal)</option>
+                        <option value="medium">Sedang (Perlu Perhatian)</option>
+                        <option value="high">Tinggi (Darurat)</option>
+                      </select>
+                      <p className="text-xs text-gray-500">
+                        Pilih sesuai tingkat kepentingan laporan
+                      </p>
+                    </div>
+
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Deskripsi Kondisi
+                        <Tooltip text="Jelaskan kondisi laut secara detail dan jelas" />
+                      </label>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        rows={4}
+                        className={`w-full px-3 md:px-4 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                        required
+                      />
+                      <div className="flex justify-between items-center">
+                        <ErrorMessage message={errors.description} />
+                        <span className={`text-xs ${description.length < 20 ? 'text-red-500' : 'text-gray-500'}`}>
+                          {description.length}/1000 karakter
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informasi Lokasi */}
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-blue-900 flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Informasi Lokasi
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Alamat
+                        <Tooltip text="Lokasi umum atau nama tempat" />
+                      </label>
+                      <input
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className={`w-full px-3 md:px-4 py-2 border ${errors.address ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                        required
+                      />
+                      <ErrorMessage message={errors.address} />
+                      <p className="text-xs text-gray-500">
+                        Contoh: "Kepulauan Seribu, DKI Jakarta"
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Nama Area
+                      </label>
+                      <input
+                        type="text"
+                        value={areaName}
+                        onChange={(e) => setAreaName(e.target.value)}
+                        className={`w-full px-3 md:px-4 py-2 border ${errors.areaName ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                        required
+                      />
+                      <ErrorMessage message={errors.areaName} />
+                      <p className="text-xs text-gray-500">
+                        Contoh: "Perairan Kepulauan Seribu"
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Latitude
+                        <Tooltip text="Koordinat latitude antara -90 sampai 90" />
+                      </label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={latitude}
+                        onChange={(e) => setLatitude(Number(e.target.value))}
+                        className={`w-full px-3 md:px-4 py-2 border ${errors.latitude ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                        required
+                      />
+                      <ErrorMessage message={errors.latitude} />
+                      <p className="text-xs text-gray-500">
+                        Default: -5.8 (Jakarta)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Longitude
+                        <Tooltip text="Koordinat longitude antara -180 sampai 180" />
+                      </label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={longitude}
+                        onChange={(e) => setLongitude(Number(e.target.value))}
+                        className={`w-full px-3 md:px-4 py-2 border ${errors.longitude ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                        required
+                      />
+                      <ErrorMessage message={errors.longitude} />
+                      <p className="text-xs text-gray-500">
+                        Default: 106.5 (Jakarta)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Kondisi Laut */}
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-blue-900 flex items-center gap-2">
+                    <Waves className="w-5 h-5" />
+                    Kondisi Laut
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Tinggi Gelombang
+                        <Tooltip text="Tinggi gelombang dalam meter (0-50m)" />
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={waveHeight}
+                          onChange={(e) => setWaveHeight(Number(e.target.value))}
+                          className={`w-full px-3 md:px-4 py-2 border ${errors.waveHeight ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                          required
+                        />
+                        <span className="absolute right-3 top-2.5 text-gray-400 text-sm">meter</span>
+                      </div>
+                      <ErrorMessage message={errors.waveHeight} />
+                      <p className="text-xs text-gray-500">
+                        Default: 0.8m (tenang)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Kecepatan Angin
+                        <Tooltip text="Kecepatan angin dalam km/jam (0-300km/jam)" />
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={windSpeed}
+                          onChange={(e) => setWindSpeed(Number(e.target.value))}
+                          className={`w-full px-3 md:px-4 py-2 border ${errors.windSpeed ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                          required
+                        />
+                        <span className="absolute right-3 top-2.5 text-gray-400 text-sm">km/jam</span>
+                      </div>
+                      <ErrorMessage message={errors.windSpeed} />
+                      <p className="text-xs text-gray-500">
+                        Default: 12 km/jam (sepoi-sepoi)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Arah Angin
+                        <Tooltip text="Arah angin dalam derajat (0-360°)" />
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={windDirection}
+                          onChange={(e) => setWindDirection(Number(e.target.value))}
+                          className={`w-full px-3 md:px-4 py-2 border ${errors.windDirection ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                          required
+                        />
+                        <span className="absolute right-3 top-2.5 text-gray-400 text-sm">°</span>
+                      </div>
+                      <ErrorMessage message={errors.windDirection} />
+                      <p className="text-xs text-gray-500">
+                        Default: 90° (timur)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Visibilitas
+                        <Tooltip text="Jarak pandang dalam kilometer (0-100km)" />
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={visibility}
+                          onChange={(e) => setVisibility(Number(e.target.value))}
+                          className={`w-full px-3 md:px-4 py-2 border ${errors.visibility ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                          required
+                        />
+                        <span className="absolute right-3 top-2.5 text-gray-400 text-sm">km</span>
+                      </div>
+                      <ErrorMessage message={errors.visibility} />
+                      <p className="text-xs text-gray-500">
+                        Default: 8km (baik)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Suhu Laut
+                        <Tooltip text="Suhu air laut dalam °C (-2°C sampai 40°C)" />
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={seaTemperature}
+                          onChange={(e) => setSeaTemperature(Number(e.target.value))}
+                          className={`w-full px-3 md:px-4 py-2 border ${errors.seaTemperature ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                          required
+                        />
+                        <span className="absolute right-3 top-2.5 text-gray-400 text-sm">°C</span>
+                      </div>
+                      <ErrorMessage message={errors.seaTemperature} />
+                      <p className="text-xs text-gray-500">
+                        Default: 29°C (tropis)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Kekuatan Arus
+                        <Tooltip text="Skala 0-10 (0=lemah, 10=sangat kuat)" />
+                      </label>
+                      <input
+                        type="number"
+                        value={currentStrength}
+                        onChange={(e) => setCurrentStrength(Number(e.target.value))}
+                        className={`w-full px-3 md:px-4 py-2 border ${errors.currentStrength ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                        required
+                      />
+                      <ErrorMessage message={errors.currentStrength} />
+                      <p className="text-xs text-gray-500">
+                        Default: 1 (lemah)
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Deskripsi Cuaca
+                      </label>
+                      <input
+                        type="text"
+                        value={weatherDescription}
+                        onChange={(e) => setWeatherDescription(e.target.value)}
+                        className={`w-full px-3 md:px-4 py-2 border ${errors.weatherDescription ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                        required
+                      />
+                      <ErrorMessage message={errors.weatherDescription} />
+                      <p className="text-xs text-gray-500">
+                        Contoh: "Cerah berawan, angin sepoi-sepoi"
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
+                        Tinggi Pasang
+                      </label>
+                      <select
+                        value={tideLevel}
+                        onChange={(e) => setTideLevel(e.target.value as TideLevel)}
+                        className="w-full px-3 md:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                        required
+                      >
+                        <option value="low">Rendah</option>
+                        <option value="medium">Sedang</option>
+                        <option value="high">Tinggi</option>
+                      </select>
+                      <p className="text-xs text-gray-500">
+                        Default: Sedang
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Penilaian Keselamatan - MODIFIED */}
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-blue-900 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    Penilaian Keselamatan
+                  </h2>
+                  
+                  <div className="grid grid-cols-1 gap-4 md:gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-black">
+                        Tingkat Keselamatan Keseluruhan
+                      </label>
+                      <div className="flex flex-wrap gap-4">
+                        {(['safe', 'caution', 'danger'] as SafetyLevel[]).map((level) => (
+                          <label key={level} className="flex items-center text-black">
+                            <input
+                              type="radio"
+                              checked={overallSafety === level}
+                              onChange={() => setOverallSafety(level)}
+                              className="mr-2"
+                              required
+                            />
+                            <span className="text-black">{safetyLevelLabels[level]}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Pilih tingkat keselamatan berdasarkan kondisi keseluruhan
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-black">
+                        Rekomendasi untuk Jenis Kapal
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {(['perahu_kecil', 'kapal_nelayan', 'kapal_besar'] as BoatType[]).map((boatType) => (
+                          <div key={boatType} className="border border-gray-200 p-3 rounded-lg bg-white">
+                            <h3 className="font-medium mb-2 text-sm text-black">
+                              {boatType === 'perahu_kecil' && 'Perahu Kecil'}
+                              {boatType === 'kapal_nelayan' && 'Kapal Nelayan'}
+                              {boatType === 'kapal_besar' && 'Kapal Besar'}
+                            </h3>
+                            <div className="space-y-2">
+                              {(['safe', 'caution', 'danger'] as SafetyLevel[]).map((level) => (
+                                <label key={level} className="flex items-center text-sm text-black">
+                                  <input
+                                    type="radio"
+                                    name={boatType}
+                                    checked={boatRecommendations[boatType] === level}
+                                    onChange={() => handleBoatRecommendationChange(boatType, level)}
+                                    className="mr-2"
+                                    required
+                                  />
+                                  <span className="text-black">{safetyLevelLabels[level]}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-black">
+                        Tindakan yang Direkomendasikan
+                      </label>
+                      <div className="space-y-2">
+                        {recommendedActions.map((action, index) => (
+                          <div key={index} className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                            <span className="text-sm text-black">{action}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveAction(action)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                        <div className="flex mt-2">
+                          <input
+                            type="text"
+                            value={newAction}
+                            onChange={(e) => setNewAction(e.target.value)}
+                            placeholder="Tambah tindakan baru"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddAction}
+                            className="bg-blue-500 text-white px-3 py-2 rounded-r-lg hover:bg-blue-600 flex items-center"
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tags - MODIFIED */}
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold text-blue-900 flex items-center gap-2">
+                    Kategori
+                  </h2>
+                  
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag, index) => (
+                        <div key={index} className="flex items-center bg-blue-100 px-3 py-1 rounded-full border border-blue-200">
+                          <span className="text-sm text-black">{tag}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tag)}
+                            className="ml-2 text-red-500 hover:text-red-700"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex">
+                      <input
+                        type="text"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        placeholder="Tambah tag baru (contoh: kondisi_baik)"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddTag}
+                        className="bg-blue-500 text-white px-3 py-2 rounded-r-lg hover:bg-blue-600 flex items-center"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Tag akan otomatis diubah menjadi huruf kecil dan spasi diganti dengan underscore (_)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Notes Section */}
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-medium text-yellow-900 text-sm mb-1">
+                        Catatan Pengisian
+                      </h3>
+                      <ul className="text-yellow-700 text-xs space-y-1">
+                        <li>• Semua field telah diisi dengan nilai default kondisi normal</li>
+                        <li>• Pastikan untuk menyesuaikan dengan kondisi aktual sebelum mengirim</li>
+                        <li>• Tingkat urgensi mempengaruhi prioritas penanganan laporan</li>
+                        <li>• Rekomendasi keselamatan harus sesuai dengan kondisi terbaru</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-[#053040] hover:bg-[#2C5B6B] text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Mengirim Laporan...
+                      </>
+                    ) : (
+                      <>
+                        Kirim Laporan ke Komunitas
+                        <ChevronRight className="w-5 h-5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
+        </main>
       </LayoutNavbar>
       <Footer />
     </>
@@ -739,7 +916,16 @@ function CommunityReportFormContent() {
 
 export default function CommunityReportFormPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen pt-20 p-4 md:p-8 bg-white max-w-7xl mx-auto">
+        <div className="flex justify-center items-center h-64">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
+            <p className="text-gray-600">Memuat form laporan...</p>
+          </div>
+        </div>
+      </div>
+    }>
       <CommunityReportFormContent />
     </Suspense>
   );

@@ -37,6 +37,7 @@ type Guide = {
 type LoadingState = {
   guides: boolean;
   filters: boolean;
+  loadMore: boolean;
 };
 
 // Helper function to convert YouTube URLs to embed format
@@ -63,11 +64,13 @@ const getYouTubeEmbedUrl = (url: string) => {
 
 export default function PanduanPage() {
   const router = useRouter();
-  const [guides, setGuides] = useState<Guide[]>([]);
+  const [allGuides, setAllGuides] = useState<Guide[]>([]);
+  const [displayedGuides, setDisplayedGuides] = useState<Guide[]>([]);
   const [totalGuides, setTotalGuides] = useState<number>(0);
   const [loading, setLoading] = useState<LoadingState>({
     guides: false,
-    filters: false
+    filters: false,
+    loadMore: false
   });
   const [authError, setAuthError] = useState<string>("");
   const [apiError, setApiError] = useState<string>("");
@@ -76,10 +79,11 @@ export default function PanduanPage() {
     is_active: true,
     sort_by: "priority",
     sort_order: "asc",
-    limit: 10
+    limit: 100 // Increase limit to get more data at once
   });
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [displayCount, setDisplayCount] = useState(6); // Default show 6 cards
 
   const fetchGuides = async () => {
     setLoading(prev => ({...prev, guides: true}));
@@ -119,8 +123,10 @@ export default function PanduanPage() {
 
       const data = await response.json();
       if (data.success) {
-        setGuides(data.data.guides);
+        setAllGuides(data.data.guides);
         setTotalGuides(data.data.total);
+        // Initially display only the first 6 guides
+        setDisplayedGuides(data.data.guides.slice(0, displayCount));
       } else {
         setApiError(data.message || 'Gagal memuat panduan');
       }
@@ -136,6 +142,21 @@ export default function PanduanPage() {
     fetchGuides();
   }, [filters]);
 
+  // Update displayed guides when displayCount changes
+  useEffect(() => {
+    setDisplayedGuides(allGuides.slice(0, displayCount));
+  }, [displayCount, allGuides]);
+
+  const handleLoadMore = () => {
+    setLoading(prev => ({...prev, loadMore: true}));
+    
+    // Simulate loading for better UX
+    setTimeout(() => {
+      setDisplayCount(prev => prev + 6);
+      setLoading(prev => ({...prev, loadMore: false}));
+    }, 500);
+  };
+
   const handleStartAnalysis = () => {
     router.push("/checklist/form-panduan");
   };
@@ -143,13 +164,13 @@ export default function PanduanPage() {
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "safety":
-        return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800";
+        return "bg-red-100 text-red-800 border-red-200";
       case "navigation":
-        return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800";
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "emergency":
-        return "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800";
+        return "bg-orange-100 text-orange-800 border-orange-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700";
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
@@ -170,8 +191,9 @@ export default function PanduanPage() {
       is_active: true,
       sort_by: "priority",
       sort_order: "asc",
-      limit: 10
+      limit: 100
     });
+    setDisplayCount(6); // Reset to initial display count
   };
 
   // Format description to be consistent
@@ -215,23 +237,23 @@ export default function PanduanPage() {
           </div>
         )}
 
-        <main className="min-h-screen pt-20 px-4 sm:px-6 lg:px-8 py-6 bg-white dark:bg-gray-900 transition-colors">
+        <main className="min-h-screen pt-20 px-4 sm:px-6 lg:px-8 py-6 bg-white transition-colors">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <div className="w-full">
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#053040] dark:text-white">
+                <h1 className="text-2xl sm:text-3xl font-bold text-[#053040]">
                   Panduan Keselamatan Berlayar
                 </h1>
-                <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm sm:text-base">
-                  {totalGuides} panduan tersedia untuk berbagai kondisi berlayar
+                <p className="text-gray-700 mt-1 text-sm sm:text-base">
+                  Menampilkan {displayedGuides.length} dari {totalGuides} panduan
                 </p>
               </div>
               <div className="flex gap-3 w-full md:w-auto">
                 {/* Mobile Filter Toggle */}
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="md:hidden bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-3 rounded-lg transition flex items-center gap-2 flex-1 justify-center"
+                  className="md:hidden bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg transition flex items-center gap-2 flex-1 justify-center"
                 >
                   <Filter className="w-4 h-4" />
                   <span>Filter</span>
@@ -239,7 +261,7 @@ export default function PanduanPage() {
                 
                 <button
                   onClick={handleStartAnalysis}
-                  className="bg-[#053040] hover:bg-[#07475f] dark:bg-[#0e4a63] dark:hover:bg-[#0c5a7a] text-white px-4 sm:px-6 py-3 rounded-lg transition whitespace-nowrap flex items-center gap-2 shadow-md flex-1 md:flex-none justify-center"
+                  className="bg-[#053040] hover:bg-[#07475f] text-white px-4 sm:px-6 py-3 rounded-lg transition whitespace-nowrap flex items-center gap-2 shadow-md flex-1 md:flex-none justify-center"
                   disabled={loading.guides}
                 >
                   {loading.guides ? (
@@ -258,7 +280,7 @@ export default function PanduanPage() {
 
             {/* Error Messages */}
             {authError && (
-              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded mb-6 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
+              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded mb-6">
                 <div className="flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
@@ -268,7 +290,7 @@ export default function PanduanPage() {
               </div>
             )}
             {apiError && (
-              <div className="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-6 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300">
+              <div className="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded mb-6">
                 <div className="flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -279,12 +301,12 @@ export default function PanduanPage() {
             )}
 
             {/* Filter Section */}
-            <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-6 mb-6 border border-gray-100 dark:border-gray-700 transition-all ${showFilters ? 'block' : 'hidden md:block'}`}>
+            <div className={`bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6 border border-gray-100 transition-all ${showFilters ? 'block' : 'hidden md:block'}`}>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold text-lg text-gray-800 dark:text-white">Filter Panduan</h2>
+                <h2 className="font-semibold text-lg text-gray-800">Filter Panduan</h2>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="md:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="md:hidden text-gray-500 hover:text-gray-700"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -292,13 +314,13 @@ export default function PanduanPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Kategori
                   </label>
                   <select
                     value={filters.category}
                     onChange={(e) => setFilters({...filters, category: e.target.value})}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#053040] focus:border-[#053040] outline-none transition bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#053040] focus:border-[#053040] outline-none transition bg-white text-gray-900"
                     disabled={loading.filters}
                   >
                     <option value="">Semua Kategori</option>
@@ -309,13 +331,13 @@ export default function PanduanPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Urutkan Berdasarkan
                   </label>
                   <select
                     value={filters.sort_by}
                     onChange={(e) => setFilters({...filters, sort_by: e.target.value})}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#053040] focus:border-[#053040] outline-none transition bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#053040] focus:border-[#053040] outline-none transition bg-white text-gray-900"
                     disabled={loading.filters}
                   >
                     <option value="priority">Prioritas</option>
@@ -324,13 +346,13 @@ export default function PanduanPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Urutan
                   </label>
                   <select
                     value={filters.sort_order}
                     onChange={(e) => setFilters({...filters, sort_order: e.target.value})}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#053040] focus:border-[#053040] outline-none transition bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#053040] focus:border-[#053040] outline-none transition bg-white text-gray-900"
                     disabled={loading.filters}
                   >
                     <option value="asc">A-Z / Terkecil</option>
@@ -338,19 +360,17 @@ export default function PanduanPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Jumlah Tampil
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
                   </label>
                   <select
-                    value={filters.limit}
-                    onChange={(e) => setFilters({...filters, limit: Number(e.target.value)})}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#053040] focus:border-[#053040] outline-none transition bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    value={filters.is_active.toString()}
+                    onChange={(e) => setFilters({...filters, is_active: e.target.value === "true"})}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#053040] focus:border-[#053040] outline-none transition bg-white text-gray-900"
                     disabled={loading.filters}
                   >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
+                    <option value="true">Aktif</option>
+                    <option value="false">Nonaktif</option>
                   </select>
                 </div>
               </div>
@@ -359,7 +379,7 @@ export default function PanduanPage() {
               <div className="flex justify-end mt-4">
                 <button
                   onClick={resetFilters}
-                  className="text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 underline"
+                  className="text-sm text-gray-600 hover:text-gray-800 underline"
                 >
                   Reset filter
                 </button>
@@ -369,130 +389,157 @@ export default function PanduanPage() {
             {/* Loading State */}
             {loading.guides && (
               <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#053040] dark:border-white"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#053040]"></div>
               </div>
             )}
 
             {/* Guides List */}
-            {!loading.guides && guides.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {guides.map((guide) => (
-                  <div
-                    key={guide.id}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100 dark:border-gray-700 flex flex-col h-full"
-                  >
-                    {/* Image */}
-                    <div className="relative h-40 sm:h-48">
-                      {guide.image_url ? (
-                        <>
-                          <Image
-                            src={guide.image_url}
-                            alt={guide.title}
-                            fill
-                            className="object-cover"
-                            unoptimized
-                          />
+            {!loading.guides && displayedGuides.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  {displayedGuides.map((guide) => (
+                    <div
+                      key={guide.id}
+                      className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow border border-gray-100 flex flex-col h-full"
+                    >
+                      {/* Image */}
+                      <div className="relative h-40 sm:h-48">
+                        {guide.image_url ? (
+                          <>
+                            <Image
+                              src={guide.image_url}
+                              alt={guide.title}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                            {guide.video_url && (
+                              <button
+                                onClick={() => setSelectedVideo(guide.video_url || null)}
+                                className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors"
+                              >
+                                <PlayCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white bg-[#2C5B6B] rounded-full p-2 bg-opacity-80 hover:bg-opacity-100 transition" />
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                            <span className="text-gray-500 text-sm">Tidak ada gambar</span>
+                          </div>
+                        )}
+                        {guide.is_mandatory && (
+                          <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                            WAJIB
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="p-4 sm:p-5 flex-1 flex flex-col">
+                        {/* Category and Title */}
+                        <div className="mb-3">
+                          <span className={`inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full border ${getCategoryColor(guide.category)}`}>
+                            {getCategoryIcon(guide.category)}
+                            <span className="ml-1">
+                              {guide.category === "safety" ? "Keselamatan" : 
+                              guide.category === "navigation" ? "Navigasi" : 
+                              guide.category === "emergency" ? "Darurat" : "Umum"}
+                            </span>
+                          </span>
+                          <h3 className="font-bold text-base sm:text-lg mt-2 text-gray-800 line-clamp-2">
+                            {guide.title}
+                          </h3>
+                        </div>
+                      
+                        {/* Description - Consistent Height with Smooth Ellipsis */}
+                        <div className="mb-4 flex-1 min-h-[4.5rem]">
+                          <p className="text-gray-700 text-sm leading-relaxed line-clamp-3 overflow-hidden text-ellipsis">
+                            {formatDescription(guide.description)}
+                          </p>
+                        </div>
+                        
+                        {/* Tags */}
+                        {guide.tags.length > 0 && (
+                          <div className="mt-auto mb-3">
+                            <div className="flex flex-wrap gap-1">
+                              {guide.tags.slice(0, 3).map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full capitalize"
+                                >
+                                  {tag.split('_').map(word => 
+                                    word.charAt(0).toUpperCase() + word.slice(1)
+                                  ).join(' ')}
+                                </span>
+                              ))}
+                              {guide.tags.length > 3 && (
+                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                                  +{guide.tags.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Footer */}
+                        <div className="flex justify-between items-center pt-3 border-t border-gray-100 mt-auto">
+                          <div className="flex items-center text-sm text-gray-700">
+                            <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                            <span>{guide.estimated_time_minutes} menit</span>
+                          </div>
                           {guide.video_url && (
                             <button
                               onClick={() => setSelectedVideo(guide.video_url || null)}
-                              className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors"
+                              className="text-sm text-[#053040] hover:text-[#07475f] font-medium flex items-center"
                             >
-                              <PlayCircle className="w-10 h-10 sm:w-12 sm:h-12 text-white bg-[#2C5B6B] rounded-full p-2 bg-opacity-80 hover:bg-opacity-100 transition" />
+                              <PlayCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                              Video
                             </button>
                           )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Load More Button */}
+                {displayedGuides.length < allGuides.length && (
+                  <div className="flex justify-center mt-8">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={loading.loadMore}
+                      className="bg-[#053040] hover:bg-[#07475f] text-white px-6 py-3 rounded-lg transition font-medium flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {loading.loadMore ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Memuat...
                         </>
                       ) : (
-                        <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                          <span className="text-gray-400 dark:text-gray-500 text-sm">Tidak ada gambar</span>
-                        </div>
+                        <>
+                          Tampilkan Lebih Banyak
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </>
                       )}
-                      {guide.is_mandatory && (
-                        <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
-                          WAJIB
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="p-4 sm:p-5 flex-1 flex flex-col">
-                      {/* Category and Title */}
-                      <div className="mb-3">
-                        <span className={`inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full border ${getCategoryColor(guide.category)}`}>
-                          {getCategoryIcon(guide.category)}
-                          <span className="ml-1">
-                            {guide.category === "safety" ? "Keselamatan" : 
-                             guide.category === "navigation" ? "Navigasi" : 
-                             guide.category === "emergency" ? "Darurat" : "Umum"}
-                          </span>
-                        </span>
-                        <h3 className="font-bold text-base sm:text-lg mt-2 text-gray-800 dark:text-white line-clamp-2">
-                          {guide.title}
-                        </h3>
-                      </div>
-                    
-                      {/* Description - Consistent Height with Smooth Ellipsis */}
-                      <div className="mb-4 flex-1 min-h-[4.5rem]">
-                        <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed line-clamp-3 overflow-hidden text-ellipsis">
-                          {formatDescription(guide.description)}
-                        </p>
-                      </div>
-                      
-                      {/* Tags */}
-                      {guide.tags.length > 0 && (
-                        <div className="mt-auto mb-3">
-                          <div className="flex flex-wrap gap-1">
-                            {guide.tags.slice(0, 3).map((tag) => (
-                              <span
-                                key={tag}
-                                className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full capitalize"
-                              >
-                                {tag.split('_').map(word => 
-                                  word.charAt(0).toUpperCase() + word.slice(1)
-                                ).join(' ')}
-                              </span>
-                            ))}
-                            {guide.tags.length > 3 && (
-                              <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">
-                                +{guide.tags.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Footer */}
-                      <div className="flex justify-between items-center pt-3 border-t border-gray-100 dark:border-gray-700 mt-auto">
-                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                          <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                          <span>{guide.estimated_time_minutes} menit</span>
-                        </div>
-                        {guide.video_url && (
-                          <button
-                            onClick={() => setSelectedVideo(guide.video_url || null)}
-                            className="text-sm text-[#053040] hover:text-[#07475f] dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center"
-                          >
-                            <PlayCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                            Video
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    </button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
 
             {/* Empty State */}
-            {!loading.guides && guides.length === 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 sm:p-8 text-center border border-gray-100 dark:border-gray-700">
-                <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {!loading.guides && displayedGuides.length === 0 && (
+              <div className="bg-white rounded-xl shadow-sm p-6 sm:p-8 text-center border border-gray-100">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">Tidak ada panduan yang ditemukan</h3>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Coba ubah filter pencarian Anda</p>
+                <h3 className="mt-2 text-lg font-medium text-gray-900">Tidak ada panduan yang ditemukan</h3>
+                <p className="mt-1 text-sm text-gray-700">Coba ubah filter pencarian Anda</p>
                 <button
                   onClick={resetFilters}
-                  className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#053040] hover:bg-[#07475f] dark:bg-[#0e4a63] dark:hover:bg-[#0c5a7a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#053040] dark:focus:ring-offset-gray-900"
+                  className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#053040] hover:bg-[#07475f] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#053040]"
                 >
                   Reset filter
                 </button>
