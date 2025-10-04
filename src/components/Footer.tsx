@@ -28,7 +28,7 @@ export default function Footer() {
           {/* About Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Waves className="text-[#2C5B6B]" size={28} />
+              {/* <Waves className="text-[#2C5B6B]" size={28} /> */}
               <span className="font-bold text-2xl">Pelaut Hebat</span>
             </div>
             <p className="text-[#C9CFCF] text-sm leading-relaxed">

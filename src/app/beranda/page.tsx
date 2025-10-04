@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import LayoutNavbar from '@/components/LayoutNavbar'
 import Footer from '@/components/Footer'
 import Image from 'next/image'
-import { Quote, Waves, Cloud, Map, Shield, AlertTriangle, Flag, Droplets, Wind, Gauge, ChevronDown, Play, Pause } from 'lucide-react'
+import { Quote, Waves, Cloud, Map, Shield, AlertTriangle, Flag, Droplets, Wind, Gauge, ChevronDown, Play, Pause, Compass, CheckCircle, Navigation, Eye } from 'lucide-react'
 import { useTokenRefresh } from '@/app/hooks/useAuth'
 
 export default function DashboardPage() {
@@ -82,6 +82,44 @@ export default function DashboardPage() {
     }
   ];
 
+  const usageSteps = [
+    {
+      step: 1,
+      title: "Cek Kondisi Laut",
+      description: "Masuk ke menu kondisi laut dengan titik koordinat sesuai lokasi terkini Anda",
+      icon: <Waves className="text-white" size={24} />,
+      color: "from-[#053040] to-[#0A4A60]"
+    },
+    {
+      step: 2,
+      title: "Cek Prakiraan Cuaca",
+      description: "Periksa prakiraan cuaca laut berdasarkan koordinat lokasi terkini",
+      icon: <Cloud className="text-white" size={24} />,
+      color: "from-[#0A4A60] to-[#2C5B6B]"
+    },
+    {
+      step: 3,
+      title: "Filter Panduan Keselamatan",
+      description: "Gunakan menu checklist untuk memfilter panduan sesuai kebutuhan Anda",
+      icon: <CheckCircle className="text-white" size={24} />,
+      color: "from-[#2C5B6B] to-[#3A6D7E]"
+    },
+    {
+      step: 4,
+      title: "Lakukan Perjalanan",
+      description: "Mulai perjalanan dengan memperhatikan analisis dan rekomendasi dari website",
+      icon: <Navigation className="text-white" size={24} />,
+      color: "from-[#3A6D7E] to-[#4C7E8F]"
+    },
+    {
+      step: 5,
+      title: "Berikan Feedback",
+      description: "Gunakan menu peta komunitas untuk memberikan feedback berdasarkan penglihatan langsung",
+      icon: <Eye className="text-white" size={24} />,
+      color: "from-[#4C7E8F] to-[#5D8FA0]"
+    }
+  ];
+
   return (
     <>
       <LayoutNavbar>
@@ -118,12 +156,98 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Fitur Utama - Enhanced */}
+          {/* Cara Penggunaan Website - MODIFIED SECTION */}
           <section className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-[#053040] mb-2">Fitur Utama</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Cara Penggunaan Website</h2>
               <div className="w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
-              <p className="text-[#4C5F6B] mt-4 max-w-2xl mx-auto">
+              <p className="text-[#4C5F6B] dark:text-gray-300 mt-4 max-w-2xl mx-auto">
+                Ikuti langkah-langkah berikut untuk memaksimalkan penggunaan Pelaut Hebat
+              </p>
+            </div>
+
+            <div className="relative">
+              {/* Timeline Connector - MODIFIED with main color palette */}
+              <div className="absolute left-4 md:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#053040] via-[#2C5B6B] to-[#4C7E8F] hidden md:block"></div>
+              
+              <div className="space-y-8 md:space-y-12">
+                {usageSteps.map((step, index) => (
+                  <div 
+                    key={step.step}
+                    className="flex flex-col md:flex-row items-start gap-4 md:gap-6 group cursor-pointer"
+                  >
+                    {/* Step Number and Icon - MODIFIED */}
+                    <div className="flex items-center gap-4 md:w-40">
+                      <div className={`relative flex-shrink-0 w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br ${step.color} shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          {step.icon}
+                        </div>
+                        <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-5 h-5 md:w-6 md:h-6 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700">
+                          <span className="text-xs font-bold text-gray-800 dark:text-white">{step.step}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Connector dot for mobile - MODIFIED with main colors */}
+                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-[#053040] to-[#2C5B6B] md:hidden"></div>
+                    </div>
+
+                    {/* Content - MODIFIED for dark mode support */}
+                    <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 group-hover:border-[#2C5B6B] dark:group-hover:border-[#4C7E8F]">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg text-[#053040] dark:text-white mb-2 group-hover:text-[#2C5B6B] dark:group-hover:text-[#4C7E8F] transition-colors">
+                            {step.title}
+                          </h3>
+                          <p className="text-[#4C5F6B] dark:text-gray-300 leading-relaxed">
+                            {step.description}
+                          </p>
+                        </div>
+                        <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <Compass className="text-[#2C5B6B] dark:text-[#4C7E8F]" size={20} />
+                        </div>
+                      </div>
+                      
+                      {/* Progress indicator - MODIFIED */}
+                      <div className="mt-4 flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full bg-gradient-to-r ${step.color} rounded-full transition-all duration-1000`}
+                            style={{ 
+                              width: step.step === 1 ? '20%' : 
+                                     step.step === 2 ? '40%' : 
+                                     step.step === 3 ? '60%' : 
+                                     step.step === 4 ? '80%' : '100%' 
+                            }}
+                          ></div>
+                        </div>
+                        <span className="text-xs font-medium text-[#4C5F6B] dark:text-gray-400">
+                          {step.step}/5
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Call to Action - MODIFIED for dark mode */}
+              <div className="mt-12 text-center">
+                <div className="inline-flex items-center gap-3 bg-gradient-to-r from-[#053040] to-[#2C5B6B] text-white px-6 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <Compass size={24} />
+                  <div className="text-left">
+                    <div className="font-semibold">Siap Memulai?</div>
+                    <div className="text-sm opacity-90">Ikuti panduan di atas untuk pengalaman terbaik</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Fitur Utama - Enhanced with dark mode support */}
+          <section className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Fitur Utama</h2>
+              <div className="w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
+              <p className="text-[#4C5F6B] dark:text-gray-300 mt-4 max-w-2xl mx-auto">
                 Pelaut Hebat menawarkan berbagai fitur yang dirancang untuk meningkatkan keselamatan dan mendukung masyarakat pesisir.
               </p>
             </div>
@@ -132,39 +256,40 @@ export default function DashboardPage() {
                 { 
                   title: 'Manajemen Keselamatan', 
                   desc: 'Protokol keselamatan komprehensif dan alat manajemen risiko untuk operasi maritim.', 
-                  icon: <Shield className="text-[#053040]" size={32} />
+                  icon: <Shield className="text-[#053040] dark:text-[#2C5B6B]" size={32} />
                 },
                 { 
                   title: 'Ringkasan Cuaca', 
                   desc: 'Ringkasan cuaca dan gelombang laut yang disajikan dalam bentuk singkat dan mudah dipahami oleh pengguna hasil dari pengolahan data oleh AI.', 
-                  icon: <Cloud className="text-[#053040]" size={32} />
+                  icon: <Cloud className="text-[#053040] dark:text-[#2C5B6B]" size={32} />
                 },
                 { 
                   title: 'Peta Komunitas', 
                   desc: 'Sistem respons cepat dan efektif untuk keadaan darurat maritim dan panggilan darurat.', 
-                  icon: <Map className="text-[#053040]" size={32} />
+                  icon: <Map className="text-[#053040] dark:text-[#2C5B6B]" size={32} />
                 }
               ].map((item, index) => (
                 <div 
                   key={index} 
-                  className="p-6 border rounded-xl shadow-sm bg-white hover:shadow-md transition-all duration-300 hover:-translate-y-2 group cursor-pointer"
+                  className="p-6 border rounded-xl shadow-sm bg-white dark:bg-gray-800 hover:shadow-md transition-all duration-300 hover:-translate-y-2 group cursor-pointer border-gray-200 dark:border-gray-700"
                 >
-                  <div className="w-14 h-14 bg-[#2C5B6B]/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#2C5B6B]/20 transition-colors">
+                  <div className="w-14 h-14 bg-[#2C5B6B]/10 dark:bg-[#2C5B6B]/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-[#2C5B6B]/20 dark:group-hover:bg-[#2C5B6B]/30 transition-colors">
                     {item.icon}
                   </div>
-                  <h3 className="font-semibold text-lg text-[#053040] mb-2 group-hover:text-[#2C5B6B] transition-colors">{item.title}</h3>
-                  <p className="text-sm text-[#4C5F6B]">{item.desc}</p>
+                  <h3 className="font-semibold text-lg text-[#053040] dark:text-white mb-2 group-hover:text-[#2C5B6B] dark:group-hover:text-[#4C7E8F] transition-colors">{item.title}</h3>
+                  <p className="text-sm text-[#4C5F6B] dark:text-gray-300">{item.desc}</p>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Manajemen Keselamatan - Enhanced */}
+          {/* ... (sisa kode tetap sama dengan penambahan dark mode class di bagian yang diperlukan) ... */}
+          {/* Manajemen Keselamatan - Enhanced with dark mode */}
           <section className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-[#053040] mb-2">Manajemen Keselamatan</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Manajemen Keselamatan</h2>
               <div className="w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
-              <p className="text-[#4C5F6B] mt-4 max-w-2xl mx-auto">
+              <p className="text-[#4C5F6B] dark:text-gray-300 mt-4 max-w-2xl mx-auto">
                 Protokol keselamatan komprehensif dan alat manajemen risiko untuk operasi maritim.
               </p>
             </div>
@@ -173,25 +298,25 @@ export default function DashboardPage() {
                 { 
                   title: 'Tips Cuaca Buruk di Laut', 
                   desc: 'Durasi 2 menit',
-                  icon: <AlertTriangle className="text-[#053040]" size={20} />,
+                  icon: <AlertTriangle className="text-[#053040] dark:text-[#2C5B6B]" size={20} />,
                   image: '/cuaca.jpg'
                 },
                 { 
                   title: '5 Alat Keselamatan Wajib', 
                   desc: 'Panduan alat pelindung dasar di kapal',
-                  icon: <Shield className="text-[#053040]" size={20} />,
+                  icon: <Shield className="text-[#053040] dark:text-[#2C5B6B]" size={20} />,
                   image: '/alat-keselamatan.jpeg'
                 },
                 { 
                   title: 'Kode Warna Bendera Laut', 
                   desc: 'Pelajari arti bendera di laut',
-                  icon: <Flag className="text-[#053040]" size={20} />,
+                  icon: <Flag className="text-[#053040] dark:text-[#2C5B6B]" size={20} />,
                   image: '/arti-bendera.jpg'
                 }
               ].map((item, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-xl overflow-hidden border shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer hover:-translate-y-1"
+                  className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border shadow-md hover:shadow-xl transition-all duration-300 group cursor-pointer hover:-translate-y-1 border-gray-200 dark:border-gray-700"
                 >
                   <div className="relative h-48 overflow-hidden">
                     <Image
@@ -205,11 +330,11 @@ export default function DashboardPage() {
                   <div className="p-5">
                     <div className="flex items-center gap-2 mb-2">
                       {item.icon}
-                      <h4 className="font-semibold text-[#053040] text-md group-hover:text-[#2C5B6L] transition-colors">
+                      <h4 className="font-semibold text-[#053040] dark:text-white text-md group-hover:text-[#2C5B6B] dark:group-hover:text-[#4C7E8F] transition-colors">
                         {item.title}
                       </h4>
                     </div>
-                    <p className="text-sm text-[#628696]">
+                    <p className="text-sm text-[#628696] dark:text-gray-400">
                       {item.desc}
                     </p>
                   </div>
@@ -218,18 +343,18 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Enhanced Ringkasan Cuaca & Gelombang dengan Lokasi Terkini */}
+          {/* Enhanced Ringkasan Cuaca & Gelombang dengan Lokasi Terkini - with dark mode */}
           <section className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-[#053040] mb-2">Ringkasan Cuaca & Gelombang Laut</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Ringkasan Cuaca & Gelombang Laut</h2>
               <div className="w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
-              <p className="text-[#4C5F6B] mt-4 max-w-2xl mx-auto">
+              <p className="text-[#4C5F6B] dark:text-gray-300 mt-4 max-w-2xl mx-auto">
                 Informasi terkini tentang kondisi laut yang disajikan secara jelas dan mudah dipahami.
               </p>
             </div>
             
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Lokasi Terkini Card - Enhanced */}
+              {/* Lokasi Terkini Card - Enhanced with dark mode */}
               <div className="bg-gradient-to-br from-[#053040] to-[#2C5B6B] rounded-2xl shadow-lg overflow-hidden text-white hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="p-6">
                   {/* Header */}
@@ -304,23 +429,23 @@ export default function DashboardPage() {
                 </div>
               </div>
               
-              {/* Recommendation Card - Enhanced */}
-              <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-[#E5E7EB] hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              {/* Recommendation Card - Enhanced with dark mode */}
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-[#E5E7EB] dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="p-6">
                   {/* Notes: Data Dummy */}
-                  <p className="text-xs text-[#4C5F6B] italic mb-4">
+                  <p className="text-xs text-[#4C5F6B] dark:text-gray-400 italic mb-4">
                     *Data berikut merupakan contoh hasil analisis (dummy data).
                   </p>
 
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[#053040]/10 rounded-lg">
-                        <Waves className="text-[#053040]" size={20} />
+                      <div className="p-2 bg-[#053040]/10 dark:bg-[#2C5B6B]/20 rounded-lg">
+                        <Waves className="text-[#053040] dark:text-[#2C5B6B]" size={20} />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-lg text-[#053040]">Analisis Kondisi Laut</h4>
-                        <p className="text-sm text-[#4C5F6B]">Rekomendasi pelayaran</p>
+                        <h4 className="font-semibold text-lg text-[#053040] dark:text-white">Analisis Kondisi Laut</h4>
+                        <p className="text-sm text-[#4C5F6B] dark:text-gray-400">Rekomendasi pelayaran</p>
                       </div>
                     </div>
                     <div className="w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
@@ -328,54 +453,54 @@ export default function DashboardPage() {
 
                   {/* Metrics Grid */}
                   <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-[#F8FAFC] rounded-lg p-3 border border-[#E5E7EB] hover:border-[#2C5B6B] transition-colors group">
+                    <div className="bg-[#F8FAFC] dark:bg-gray-700 rounded-lg p-3 border border-[#E5E7EB] dark:border-gray-600 hover:border-[#2C5B6B] dark:hover:border-[#4C7E8F] transition-colors group">
                       <div className="flex items-center gap-2 mb-2">
-                        <Waves size={16} className="text-[#053040]" />
-                        <span className="text-xs font-medium text-[#4C5F6B]">Tinggi Gelombang</span>
+                        <Waves size={16} className="text-[#053040] dark:text-[#2C5B6B]" />
+                        <span className="text-xs font-medium text-[#4C5F6B] dark:text-gray-300">Tinggi Gelombang</span>
                       </div>
-                      <div className="text-xl font-bold text-[#053040]">1.96m</div>
+                      <div className="text-xl font-bold text-[#053040] dark:text-white">1.96m</div>
                       <div className="text-xs text-red-500 font-medium mt-1">Tinggi</div>
                     </div>
                     
-                    <div className="bg-[#F8FAFC] rounded-lg p-3 border border-[#E5E7EB] hover:border-[#2C5B6B] transition-colors group">
+                    <div className="bg-[#F8FAFC] dark:bg-gray-700 rounded-lg p-3 border border-[#E5E7EB] dark:border-gray-600 hover:border-[#2C5B6B] dark:hover:border-[#4C7E8F] transition-colors group">
                       <div className="flex items-center gap-2 mb-2">
-                        <Gauge size={16} className="text-[#053040]" />
-                        <span className="text-xs font-medium text-[#4C5F6B]">Periode</span>
+                        <Gauge size={16} className="text-[#053040] dark:text-[#2C5B6B]" />
+                        <span className="text-xs font-medium text-[#4C5F6B] dark:text-gray-300">Periode</span>
                       </div>
-                      <div className="text-xl font-bold text-[#053040]">11.5s</div>
+                      <div className="text-xl font-bold text-[#053040] dark:text-white">11.5s</div>
                       <div className="text-xs text-yellow-500 font-medium mt-1">Sedang</div>
                     </div>
                   </div>
 
                   {/* Analysis */}
                   <div className="space-y-4">
-                    <div className="flex items-start gap-3 group hover:bg-[#F8FAFC] p-3 rounded-lg transition-colors">
+                    <div className="flex items-start gap-3 group hover:bg-[#F8FAFC] dark:hover:bg-gray-700 p-3 rounded-lg transition-colors">
                       <div className="flex-shrink-0 mt-1">
-                        <div className="w-2 h-2 bg-[#053040] rounded-full group-hover:scale-125 transition-transform"></div>
+                        <div className="w-2 h-2 bg-[#053040] dark:bg-[#2C5B6B] rounded-full group-hover:scale-125 transition-transform"></div>
                       </div>
-                      <p className="text-sm text-[#4C5F6B] leading-relaxed">
-                        Tinggi gelombang <span className="font-semibold text-[#053040]">1,96 meter</span> berisiko untuk kapal tradisional.
+                      <p className="text-sm text-[#4C5F6B] dark:text-gray-300 leading-relaxed">
+                        Tinggi gelombang <span className="font-semibold text-[#053040] dark:text-white">1,96 meter</span> berisiko untuk kapal tradisional.
                       </p>
                     </div>
                     
-                    <div className="flex items-start gap-3 group hover:bg-[#F8FAFC] p-3 rounded-lg transition-colors">
+                    <div className="flex items-start gap-3 group hover:bg-[#F8FAFC] dark:hover:bg-gray-700 p-3 rounded-lg transition-colors">
                       <div className="flex-shrink-0 mt-1">
-                        <div className="w-2 h-2 bg-[#053040] rounded-full group-hover:scale-125 transition-transform"></div>
+                        <div className="w-2 h-2 bg-[#053040] dark:bg-[#2C5B6B] rounded-full group-hover:scale-125 transition-transform"></div>
                       </div>
-                      <p className="text-sm text-[#4C5F6B] leading-relaxed">
-                        Periode <span className="font-semibold text-[#053040]">11,5 detik</span> menunjukkan gelombang besar dengan jarak jauh.
+                      <p className="text-sm text-[#4C5F6B] dark:text-gray-300 leading-relaxed">
+                        Periode <span className="font-semibold text-[#053040] dark:text-white">11,5 detik</span> menunjukkan gelombang besar dengan jarak jauh.
                       </p>
                     </div>
                   </div>
 
                   {/* Warning Box */}
-                  <div className="mt-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 hover:border-red-600 transition-colors">
+                  <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500 hover:border-red-600 transition-colors">
                     <div className="flex items-start gap-3">
                       <AlertTriangle className="text-red-500 flex-shrink-0 mt-0.5" size={18} />
                       <div>
-                        <p className="font-medium text-red-800 text-sm mb-1">Peringatan Keselamatan</p>
-                        <p className="text-sm text-red-700 leading-relaxed">
-                          Kondisi <span className="font-semibold">tidak aman</span> untuk pelayaran. Disarankan menunda hingga pukul <span className="font-semibold text-green-600">12.30</span>.
+                        <p className="font-medium text-red-800 dark:text-red-200 text-sm mb-1">Peringatan Keselamatan</p>
+                        <p className="text-sm text-red-700 dark:text-red-300 leading-relaxed">
+                          Kondisi <span className="font-semibold">tidak aman</span> untuk pelayaran. Disarankan menunda hingga pukul <span className="font-semibold text-green-600 dark:text-green-400">12.30</span>.
                         </p>
                       </div>
                     </div>
@@ -383,10 +508,10 @@ export default function DashboardPage() {
                 </div>
                 
                 {/* Footer */}
-                <div className="bg-[#F8FAFC] px-6 py-4 border-t border-[#E5E7EB]">
-                  <div className="flex items-center justify-between text-sm text-[#4C5F6B]">
+                <div className="bg-[#F8FAFC] dark:bg-gray-700 px-6 py-4 border-t border-[#E5E7EB] dark:border-gray-600">
+                  <div className="flex items-center justify-between text-sm text-[#4C5F6B] dark:text-gray-400">
                     <div className="flex items-center gap-2">
-                      <Cloud size={16} className="text-[#2C5B6B]" />
+                      <Cloud size={16} className="text-[#2C5B6B] dark:text-[#4C7E8F]" />
                       <span>Update berikutnya</span>
                     </div>
                     <span className="font-medium">11:30 AM</span>
@@ -396,12 +521,12 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Testimoni - Enhanced with carousel */}
+          {/* Testimoni - Enhanced with carousel and dark mode */}
           <section ref={testimonialRef} className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-[#053040] mb-2">Apa Kata Mereka</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-[#053040] dark:text-white mb-2">Apa Kata Mereka</h2>
               <div className="w-20 h-1 bg-[#2C5B6B] mx-auto"></div>
-              <p className="text-[#4C5F6B] mt-4 max-w-2xl mx-auto">
+              <p className="text-[#4C5F6B] dark:text-gray-300 mt-4 max-w-2xl mx-auto">
                 Testimoni dari pengguna setia Pelaut Hebat
               </p>
             </div>
@@ -417,14 +542,14 @@ export default function DashboardPage() {
                   {testimonials.map((testimonial, i) => (
                     <div
                       key={i}
-                      className="w-full flex-shrink-0 bg-white border rounded-2xl shadow-md p-8 relative overflow-hidden hover:shadow-lg transition-shadow"
+                      className="w-full flex-shrink-0 bg-white dark:bg-gray-800 border rounded-2xl shadow-md p-8 relative overflow-hidden hover:shadow-lg transition-shadow border-gray-200 dark:border-gray-700"
                     >
-                      <Quote className="absolute top-6 right-6 text-[#053040]/10 w-16 h-16" />
+                      <Quote className="absolute top-6 right-6 text-[#053040]/10 dark:text-gray-600 w-16 h-16" />
                       <div className="relative z-10">
-                        <p className="text-lg text-[#053040] leading-relaxed mb-6">
+                        <p className="text-lg text-[#053040] dark:text-white leading-relaxed mb-6">
                           {testimonial.quote}
                         </p>
-                        <div className="text-md text-[#053040] italic font-semibold">
+                        <div className="text-md text-[#053040] dark:text-gray-300 italic font-semibold">
                           {testimonial.author}
                         </div>
                       </div>
@@ -437,7 +562,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-center gap-4 mt-8">
                 <button 
                   onClick={() => setIsPlaying(!isPlaying)}
-                  className="p-2 rounded-full bg-[#053040] text-white hover:bg-[#2C5B6B] transition-colors"
+                  className="p-2 rounded-full bg-[#053040] dark:bg-[#2C5B6B] text-white hover:bg-[#2C5B6B] dark:hover:bg-[#4C7E8F] transition-colors"
                 >
                   {isPlaying ? <Pause size={20} /> : <Play size={20} />}
                 </button>
@@ -449,7 +574,7 @@ export default function DashboardPage() {
                       key={i}
                       onClick={() => setCurrentSlide(i)}
                       className={`w-3 h-3 rounded-full transition-all ${
-                        i === currentSlide ? 'bg-[#053040]' : 'bg-[#2C5B6B]/30'
+                        i === currentSlide ? 'bg-[#053040] dark:bg-[#2C5B6B]' : 'bg-[#2C5B6B]/30 dark:bg-gray-600'
                       }`}
                     />
                   ))}
