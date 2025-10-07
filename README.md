@@ -238,7 +238,7 @@ MIT © 2025 Ocean Safety Hub - Pelaut Hebat
 
 ## 📬 Kontak & Bantuan
 
-* 🌐 Website: [pelauthebat.id](https://pelauthebat.id)
+* 🌐 Website: [pelauthebat.vercel.app]([https://pelauthebat.id](https://pelauthebat.vercel.app/))
 * 📩 Email: [support@pelaut-hebat.com](mailto:support@pelaut-hebat.com)
-* 🐙 GitHub Issues: [Repo Issues](https://github.com/bellputrii/fe_pelautHebat/issues)
+* 🐙 GitHub Issues: [Repo Issues](https://github.com/bellputrii/fe_pelautHebat)
 
