@@ -1,7 +1,4 @@
 
----
-
-````markdown
 # 🌊 Pelaut Hebat - Ocean Safety Hub (Frontend)
 
 **Website edukasi keselamatan pelayaran Indonesia** berbasis **React & Next.js**, dirancang untuk membantu nelayan, pelaut, dan masyarakat pesisir memahami kondisi laut secara **real-time**.  
