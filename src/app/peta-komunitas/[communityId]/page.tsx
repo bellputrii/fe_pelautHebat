@@ -467,7 +467,6 @@ export default function CommunityDetailPage() {
                     </div>
                   </div>
                 </div>
-
                 {/* Members Action */}
                 <div className="bg-white border border-gray-200 rounded-xl p-6">
                   <h3 className="text-xl font-bold text-[#053040] mb-4 flex items-center gap-2">
