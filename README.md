@@ -242,9 +242,3 @@ MIT © 2025 Ocean Safety Hub - Pelaut Hebat
 * 📩 Email: [support@pelaut-hebat.com](mailto:support@pelaut-hebat.com)
 * 🐙 GitHub Issues: [Repo Issues](https://github.com/bellputrii/fe_pelautHebat/issues)
 
-```
-
----
-
-Apakah kamu ingin aku tambahkan **preview gambar antarmuka (screenshot dashboard dan cuaca)** di bagian atas README agar tampak lebih profesional di GitHub?
-```
