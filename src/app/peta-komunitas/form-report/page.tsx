@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { AlertTriangle, CheckCircle, X, Plus, Waves, Info, Loader2, ChevronRight, MapPin, Cloud, Gauge, Navigation, Clock, Users, Route, Calendar } from 'lucide-react';
+import { AlertTriangle, CheckCircle, X, Plus, Waves, Info, Loader2, ChevronRight, MapPin, Cloud, Gauge, Navigation, Clock, Users, Route, Calendar, Locate } from 'lucide-react';
 import LayoutNavbar from '@/components/LayoutNavbar';
 import Footer from '@/components/Footer';
 import { auth } from '@/firebase/config';
@@ -63,13 +63,18 @@ function CommunityReportFormContent() {
 
   const [authError, setAuthError] = useState('');
 
+  // Geolocation states
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [locationSuccess, setLocationSuccess] = useState(false);
+
   // Form states dengan default values
   const [title, setTitle] = useState('Laporan Kondisi Laut');
   const [description, setDescription] = useState('Kondisi laut saat ini dalam keadaan normal, cocok untuk aktivitas pelayaran');
   const [address, setAddress] = useState('Perairan sekitar lokasi komunitas');
   const [areaName, setAreaName] = useState('Area Perairan Komunitas');
-  const [latitude, setLatitude] = useState(-5.8);
-  const [longitude, setLongitude] = useState(106.5);
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   
   // Conditions dengan default values
   const [waveHeight, setWaveHeight] = useState(0.8);
@@ -114,6 +119,98 @@ function CommunityReportFormContent() {
     return tag.trim().replace(/\s+/g, '_').toLowerCase();
   };
 
+  // Geolocation function
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Browser tidak mendukung geolocation');
+      return;
+    }
+
+    setIsGettingLocation(true);
+    setLocationError('');
+    setLocationSuccess(false);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude: lat, longitude: lng } = position.coords;
+        
+        // Set coordinates dengan pembulatan 6 digit desimal
+        setLatitude(lat.toFixed(6));
+        setLongitude(lng.toFixed(6));
+        
+        setIsGettingLocation(false);
+        setLocationSuccess(true);
+        setLocationError('');
+        
+        // Auto clear success message after 3 seconds
+        setTimeout(() => {
+          setLocationSuccess(false);
+        }, 3000);
+        
+        // Reverse geocoding untuk mendapatkan alamat
+        reverseGeocode(lat, lng);
+      },
+      (error) => {
+        setIsGettingLocation(false);
+        setLocationSuccess(false);
+        
+        let errorMessage = 'Gagal mendapatkan lokasi';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Izin akses lokasi ditolak. Silakan izinkan akses lokasi di browser Anda.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Informasi lokasi tidak tersedia';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Timeout saat mengambil lokasi. Coba lagi.';
+            break;
+          default:
+            errorMessage = 'Terjadi kesalahan saat mengambil lokasi';
+        }
+        setLocationError(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  };
+
+  // Reverse geocoding function
+  const reverseGeocode = async (lat: number, lng: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Gagal mendapatkan alamat');
+      }
+      
+      const data = await response.json();
+      
+      if (data.display_name) {
+        setAddress(data.display_name);
+        
+        // Extract area name from address components
+        const address = data.address;
+        const area = address.village || address.town || address.city || address.county || address.state || 'Lokasi Terdeteksi';
+        setAreaName(area);
+      }
+    } catch (error) {
+      console.error('Error reverse geocoding:', error);
+      // Tidak menampilkan error ke user karena koordinat sudah berhasil didapat
+    }
+  };
+
+  // Auto get location on component mount (optional)
+  useEffect(() => {
+    // Uncomment line below if you want to auto-get location on component mount
+    // getCurrentLocation();
+  }, []);
+
   // Validate form function
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -144,12 +241,22 @@ function CommunityReportFormContent() {
       newErrors.areaName = 'Nama area wajib diisi';
     }
 
-    if (latitude < -90 || latitude > 90) {
-      newErrors.latitude = 'Latitude harus antara -90 dan 90';
+    if (!latitude.trim()) {
+      newErrors.latitude = 'Latitude wajib diisi';
+    } else {
+      const latNum = parseFloat(latitude);
+      if (isNaN(latNum) || latNum < -90 || latNum > 90) {
+        newErrors.latitude = 'Latitude harus angka antara -90 dan 90';
+      }
     }
 
-    if (longitude < -180 || longitude > 180) {
-      newErrors.longitude = 'Longitude harus antara -180 dan 180';
+    if (!longitude.trim()) {
+      newErrors.longitude = 'Longitude wajib diisi';
+    } else {
+      const lngNum = parseFloat(longitude);
+      if (isNaN(lngNum) || lngNum < -180 || lngNum > 180) {
+        newErrors.longitude = 'Longitude harus angka antara -180 dan 180';
+      }
     }
 
     if (waveHeight < 0 || waveHeight > 50) {
@@ -244,8 +351,8 @@ function CommunityReportFormContent() {
         title: title,
         description: description,
         location: {
-          latitude: Number(latitude),
-          longitude: Number(longitude),
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
           address: address,
           area_name: areaName
         },
@@ -368,7 +475,7 @@ function CommunityReportFormContent() {
                     Informasi Penting
                   </h3>
                   <p className="text-blue-700 text-xs">
-                    Form ini telah diisi dengan nilai default berdasarkan kondisi normal. Pastikan untuk menyesuaikan dengan kondisi aktual sebelum mengirim laporan.
+                    Gunakan tombol "Dapatkan Lokasi Saat Ini" untuk mengisi koordinat secara otomatis, atau isi manual jika diperlukan.
                   </p>
                 </div>
               </div>
@@ -474,6 +581,46 @@ function CommunityReportFormContent() {
                     Informasi Lokasi
                   </h2>
                   
+                  {/* Geolocation Button */}
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={getCurrentLocation}
+                      disabled={isGettingLocation}
+                      className="flex items-center gap-2 bg-[#053040] text-white px-4 py-2 rounded-lg hover:bg-[#1d5466] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isGettingLocation ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Mendapatkan Lokasi...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Locate className="w-4 h-4" />
+                          <span>Dapatkan Lokasi Saat Ini</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    {locationSuccess && (
+                      <div className="flex items-center gap-2 text-green-600 text-sm mt-2">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Lokasi berhasil didapatkan dan diisi otomatis</span>
+                      </div>
+                    )}
+                    
+                    {locationError && (
+                      <div className="flex items-center gap-2 text-red-600 text-sm mt-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span>{locationError}</span>
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-gray-500 mt-1">
+                      Tekan tombol di atas untuk mengisi koordinat secara otomatis, atau isi manual di bawah
+                    </p>
+                  </div>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700 flex items-center gap-1">
@@ -515,17 +662,19 @@ function CommunityReportFormContent() {
                         Latitude
                         <Tooltip text="Koordinat latitude antara -90 sampai 90" />
                       </label>
-                      <input
-                        type="number"
-                        step="0.000001"
-                        value={latitude}
-                        onChange={(e) => setLatitude(Number(e.target.value))}
-                        className={`w-full px-3 md:px-4 py-2 border ${errors.latitude ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
-                        required
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={latitude}
+                          onChange={(e) => setLatitude(e.target.value)}
+                          className={`w-full px-3 md:px-4 py-2 border ${errors.latitude ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                          placeholder="-5.800000"
+                          required
+                        />
+                      </div>
                       <ErrorMessage message={errors.latitude} />
                       <p className="text-xs text-gray-500">
-                        Default: -5.8 (Jakarta)
+                        Format: -90.000000 sampai 90.000000
                       </p>
                     </div>
 
@@ -534,17 +683,19 @@ function CommunityReportFormContent() {
                         Longitude
                         <Tooltip text="Koordinat longitude antara -180 sampai 180" />
                       </label>
-                      <input
-                        type="number"
-                        step="0.000001"
-                        value={longitude}
-                        onChange={(e) => setLongitude(Number(e.target.value))}
-                        className={`w-full px-3 md:px-4 py-2 border ${errors.longitude ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
-                        required
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={longitude}
+                          onChange={(e) => setLongitude(e.target.value)}
+                          className={`w-full px-3 md:px-4 py-2 border ${errors.longitude ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+                          placeholder="106.500000"
+                          required
+                        />
+                      </div>
                       <ErrorMessage message={errors.longitude} />
                       <p className="text-xs text-gray-500">
-                        Default: 106.5 (Jakarta)
+                        Format: -180.000000 sampai 180.000000
                       </p>
                     </div>
                   </div>
@@ -833,7 +984,11 @@ function CommunityReportFormContent() {
                     <div className="flex flex-wrap gap-2">
                       {tags.map((tag, index) => (
                         <div key={index} className="flex items-center bg-blue-100 px-3 py-1 rounded-full border border-blue-200">
-                          <span className="text-sm text-black">{tag}</span>
+                          <span className="text-sm text-black">
+                            {tag.split('_').map(word => 
+                              word.charAt(0).toUpperCase() + word.slice(1)
+                            ).join(' ')}
+                          </span>
                           <button
                             type="button"
                             onClick={() => handleRemoveTag(tag)}
@@ -875,7 +1030,7 @@ function CommunityReportFormContent() {
                         Catatan Pengisian
                       </h3>
                       <ul className="text-yellow-700 text-xs space-y-1">
-                        <li>• Semua field telah diisi dengan nilai default kondisi normal</li>
+                        <li>• Gunakan tombol "Dapatkan Lokasi Saat Ini" untuk mengisi koordinat otomatis</li>
                         <li>• Pastikan untuk menyesuaikan dengan kondisi aktual sebelum mengirim</li>
                         <li>• Tingkat urgensi mempengaruhi prioritas penanganan laporan</li>
                         <li>• Rekomendasi keselamatan harus sesuai dengan kondisi terbaru</li>

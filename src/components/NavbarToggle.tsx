@@ -14,7 +14,7 @@ export default function NavbarToggle({ isOpen, toggle }: NavbarToggleProps) {
       className="md:hidden p-2 rounded hover:bg-gray-200 transition"
       aria-label="Toggle Navbar"
     >
-      {isOpen ? <X size={24} /> : <Menu size={24} />}
+      {isOpen ? <X size={24} className="text-[#053040]" /> : <Menu size={24} className="text-[#053040]" />}
     </button>
   )
 }

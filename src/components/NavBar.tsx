@@ -9,11 +9,11 @@ export default function Navbar() {
   const { isOpen, toggleNavbar } = useVerticalNavbar()
 
   return (
-    <header className="fixed top-0 z-50 w-full bg-white shadow-md px-6 py-4 flex items-center justify-between">
+    <header className="fixed top-0 z-50 w-full bg-white shadow-md px-4 sm:px-6 py-3 flex items-center justify-between">
       {/* Kiri: Logo dan Brand */}
       <div className="flex items-center gap-3">
         <Image src="/logo.png" alt="Logo" width={20} height={20} />
-        <h1 className="text-xl font-bold text-[#053040]">Pelaut Hebat</h1>
+        <h1 className="text-lg sm:text-xl font-bold text-[#053040]">Pelaut Hebat</h1>
       </div>
       
       {/* Kanan: Navigasi */}
@@ -26,7 +26,7 @@ export default function Navbar() {
 
       {/* Dropdown Mobile */}
       {isOpen && (
-        <div className="md:hidden absolute top-16 left-0 w-full bg-white shadow-md z-50 px-6 py-4">
+        <div className="md:hidden absolute top-full left-0 w-full bg-white shadow-md z-50 px-4 py-3">
           <NavbarContent />
         </div>
       )}

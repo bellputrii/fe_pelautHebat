@@ -1,51 +1,60 @@
+// components/LeafLetMap.tsx
 'use client';
-
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { useEffect } from 'react';
 
-// Fix default marker icons
-const DefaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+// Fix for default markers in react-leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-L.Marker.prototype.options.icon = DefaultIcon;
-
-function MapEvents({ onClick }: { onClick: (lat: number, lng: number) => void }) {
-  useMapEvents({
-    click(e) {
-      onClick(e.latlng.lat, e.latlng.lng);
-    }
-  });
-  return null;
-}
-
-export default function LeafLetMap({ 
-  center, 
-  zoom, 
-  onClick 
-}: {
+interface LeafletMapProps {
   center: [number, number];
   zoom: number;
-  onClick: (lat: number, lng: number) => void;
-}) {
+  onClick?: (lat: number, lng: number) => void;
+  markerPosition?: [number, number];
+  markerText?: string;
+}
+
+export default function LeafletMap({ 
+  center, 
+  zoom, 
+  onClick, 
+  markerPosition, 
+  markerText = "Lokasi Terpilih" 
+}: LeafletMapProps) {
+  function MapEvents() {
+    useMapEvents({
+      click: (e) => {
+        const { lat, lng } = e.latlng;
+        onClick?.(lat, lng);
+      },
+    });
+    return null;
+  }
+
   return (
-    <MapContainer 
-      center={center} 
-      zoom={zoom} 
+    <MapContainer
+      center={center}
+      zoom={zoom}
       style={{ height: '100%', width: '100%' }}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      <Marker position={center} />
-      <MapEvents onClick={onClick} />
+      {markerPosition && (
+        <Marker position={markerPosition}>
+          <Popup>
+            {markerText}
+          </Popup>
+        </Marker>
+      )}
+      <MapEvents />
     </MapContainer>
   );
 }

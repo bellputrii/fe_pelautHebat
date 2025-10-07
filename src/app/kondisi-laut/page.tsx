@@ -435,6 +435,8 @@ export default function KondisiLautPage() {
                     center={[location.lat, location.lng]} 
                     zoom={11}
                     onClick={handleMapClick}
+                    markerPosition={[location.lat, location.lng]}
+                    markerText="Lokasi Terpilih"
                   />
                 </div>
 
