@@ -1,22 +1,95 @@
-🌊 Pelaut Hebat - Ocean Safety Hub (Frontend)
 
-**Website edukasi keselamatan pelayaran Indonesia** berbasis React & Next.js. Menyajikan data cuaca maritim real-time, analisis AI, dan sistem peringatan dini berbasis visual interaktif bagi nelayan dan masyarakat pesisir.
+# 🌊 Pelaut Hebat - Ocean Safety Hub (Frontend)
 
----
-
-✨ Fitur Utama
-
-* 🌊 **Dashboard Cuaca Maritim:** Tampilan interaktif gelombang laut, kecepatan angin, suhu, dan tekanan udara
-* 🤖 **Analisis AI Terintegrasi:** Penjelasan kondisi laut dalam bahasa natural dari Google Gemini AI
-* ⏰ **Rekomendasi Waktu Berlayar:** Visualisasi waktu terbaik berdasarkan kondisi cuaca & jenis kapal
-* 🚨 **Peringatan Dini Visual:** UI peringatan interaktif dengan indikator sensitivitas anomali
-* 🌐 **Deteksi Zona Waktu Otomatis:** Menyesuaikan waktu lokal (WIB/WITA/WIT) berdasarkan lokasi pengguna
-* 🔐 **Autentikasi Firebase:** Login dengan Email/Password dan Google OAuth
-* 💨 **Responsif & Cepat:** Dukungan caching dan optimalisasi loading data API
+**Website edukasi keselamatan pelayaran Indonesia** berbasis **React & Next.js**, dirancang untuk membantu nelayan, pelaut, dan masyarakat pesisir memahami kondisi laut secara **real-time**.  
+Dengan tampilan visual interaktif, analisis AI yang mudah dipahami, dan sistem peringatan dini, **Pelaut Hebat** menjadi asisten digital keselamatan pelayaran Anda.
 
 ---
 
-🛠️ Tech Stack
+## ✨ Fitur Utama
+
+### 🌊 Dashboard Cuaca Maritim Interaktif
+Lihat kondisi laut terkini dengan tampilan visual yang mudah dibaca:
+- 🌡️ **Suhu udara & laut**
+- 💨 **Kecepatan dan arah angin**
+- 🌊 **Tinggi dan periode gelombang**
+- 📈 **Tekanan udara**
+- 🕒 **Detail prakiraan 24 jam ke depan**
+
+Seluruh data diperbarui **secara real-time** menggunakan integrasi **Open Meteo API** dan ditampilkan dalam antarmuka **responsif & dinamis**.
+
+---
+
+### 📍 Cek Kondisi Laut dengan Geolokasi Otomatis
+Fitur utama ini memungkinkan pengguna untuk:
+- **Mendeteksi lokasi terkini** secara otomatis melalui geolocation browser
+- **Menampilkan kondisi laut di area Anda** tanpa perlu input manual
+- **Melihat prakiraan cuaca terkini** secara visual dan numerik
+- Mendapatkan **ringkasan sederhana dari AI** tentang:
+  - Kecepatan dan arah angin  
+  - Tinggi gelombang  
+  - Suhu udara dan tekanan atmosfer  
+  - Periode gelombang (frekuensi ombak)
+- Disertai **rekomendasi waktu berlayar terbaik** berdasarkan kondisi tersebut
+
+💡 **AI akan menjelaskan kondisi cuaca dengan bahasa natural dan mudah dipahami orang awam**, sehingga informasi kompleks menjadi lebih praktis dan berguna dalam pengambilan keputusan.
+
+---
+
+### 🤖 Analisis AI Terintegrasi (Google Gemini AI)
+Fitur AI pada Pelaut Hebat memiliki dua fungsi utama:
+1. **Penjelasan Kondisi Laut** — menjabarkan data cuaca menjadi kalimat sederhana seperti:  
+   > “Gelombang sedang dengan kecepatan angin cukup aman untuk kapal kecil. Disarankan berlayar pagi hari.”
+2. **Rekomendasi Waktu Berlayar** — menilai kombinasi data (angin, gelombang, suhu) dan menampilkan:
+   - Waktu terbaik untuk berlayar
+   - Waktu berisiko tinggi (disertai indikator visual)
+
+---
+
+### 🚨 Peringatan Dini Visual
+Sistem peringatan interaktif dengan indikator warna dan animasi:
+- 🟢 Aman  
+- 🟡 Waspada  
+- 🔴 Bahaya  
+
+AI mendeteksi **anomali cuaca laut** dan menampilkan notifikasi otomatis jika terdeteksi perubahan signifikan, seperti potensi badai atau angin kencang mendadak.
+
+---
+
+### ⏰ Rekomendasi Waktu Berlayar
+Visualisasi waktu terbaik untuk berlayar berdasarkan:
+- Jenis kapal (perahu kecil, kapal motor, dll)
+- Kondisi cuaca dan gelombang
+- Lokasi pengguna saat ini
+
+Data disajikan dalam bentuk **grafik dan indikator warna** agar lebih mudah dibaca.
+
+---
+
+### 🌐 Deteksi Zona Waktu Otomatis
+Website menyesuaikan waktu secara **otomatis** ke zona lokal pengguna:
+- WIB (Barat)
+- WITA (Tengah)
+- WIT (Timur)
+
+---
+
+### 🔐 Autentikasi Firebase
+- Login & Register dengan **Email/Password**
+- Login cepat dengan **Google OAuth**
+- Dukungan **verifikasi email & reset password**
+- **Protected Route:** halaman dashboard dan cuaca hanya dapat diakses setelah login
+
+---
+
+### 💨 Performa Responsif & Cepat
+- Optimalisasi caching dengan **SWR**
+- Lazy loading pada grafik & peta
+- Dukungan mobile, tablet, dan desktop
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer              | Teknologi                                                     |
 | ------------------ | ------------------------------------------------------------- |
@@ -26,28 +99,27 @@
 | Auth               | **Firebase Auth** (Email/Password & Google OAuth)             |
 | API Integrasi      | **Open Meteo API**, **Google Gemini AI**, Ocean Safety Hub BE |
 | Utilities          | Headless UI, Date-fns, React Hook Form, Zod                   |
-| Deployment         | Vercel (recommended)                                          |
+| Deployment         | **Vercel** (recommended)                                      |
 
 ---
 
-🚀 Quick Start
+## 🚀 Quick Start
 
-📦 Prasyarat
+### 📦 Prasyarat
+- Node.js 18+
+- npm atau yarn
+- Firebase Project (untuk autentikasi)
+- API Backend Ocean Safety Hub aktif (lihat dokumentasi backend)
 
-* Node.js 18+
-* npm atau yarn
-* Firebase Project (untuk auth)
-* API Backend Ocean Safety Hub tersedia (lihat dokumentasi backend)
-
-🛠 Instalasi
+### 🛠 Instalasi
 
 ```bash
 git clone https://github.com/bellputrii/fe_pelautHebat.git
 cd fe_pelautHebat
 npm install
-```
+````
 
-⚙️ Konfigurasi Environment
+### ⚙️ Konfigurasi Environment
 
 Buat file `.env.local` dari template:
 
@@ -55,7 +127,7 @@ Buat file `.env.local` dari template:
 cp .env.example .env.local
 ```
 
-Edit isinya sesuai kredensial Firebase dan endpoint backend API:
+Isi kredensial sesuai Firebase dan backend API:
 
 ```env
 NEXT_PUBLIC_FIREBASE_API_KEY=...
@@ -67,7 +139,7 @@ NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:3001
 
 ---
 
-▶️ Jalankan Dev Server
+### ▶️ Jalankan Dev Server
 
 ```bash
 npm run dev
@@ -77,35 +149,38 @@ Akses di [http://localhost:3000](http://localhost:3000)
 
 ---
 
-📁 Struktur Proyek
+## 📁 Struktur Proyek
 
 ```
 src/
-├── app/                  # Struktur routing Next.js App Router
+├── app/
 │   ├── (auth)/           # Layout halaman login/register
 │   ├── dashboard/        # Halaman utama pengguna
-│   ├── weather/          # Visualisasi data cuaca
-│   ├── ai-tools/         # Fitur AI seperti rekomendasi & penjelasan
-│   └── components/       # UI komponen reusable
+│   ├── weather/          # Visualisasi data cuaca & geolocation
+│   ├── ai-tools/         # Fitur analisis & rekomendasi AI
+│   └── components/       # Komponen UI reusable
 ├── lib/                  # Firebase, utils, constants
-├── styles/               # Custom Tailwind config
-└── types/                # Tipe data & interface global
+├── styles/               # Konfigurasi Tailwind & global CSS
+└── types/                # Interface & tipe data global
 ```
 
 ---
 
-🔐 Firebase Authentication
+## 🔐 Firebase Authentication
 
 Menggunakan Firebase Auth (Client SDK):
 
-* 🔑 **Login & Register:** Email/Password
-* 🔐 **Google OAuth Login**
-* 📧 **Email Verification & Reset Password**
-* 👤 **Protected Route:** Redirect jika belum login
+| Fitur                 | Deskripsi                               |
+| --------------------- | --------------------------------------- |
+| 🔑 Login/Register     | Email & Password                        |
+| 🔐 Google OAuth       | Login cepat dengan akun Google          |
+| 📧 Email Verification | Verifikasi akun sebelum akses dashboard |
+| 🔁 Reset Password     | Kirim tautan ke email                   |
+| 👤 Protected Route    | Redirect otomatis jika belum login      |
 
 ---
 
-📊 Integrasi Backend API
+## 📊 Integrasi Backend API
 
 | Fitur                | Endpoint                     | Method | Auth     |
 | -------------------- | ---------------------------- | ------ | -------- |
@@ -118,19 +193,34 @@ Menggunakan Firebase Auth (Client SDK):
 
 ---
 
-🧪 Testing (Optional)
+## 🌐 Explore Website
 
-Coming soon with Jest & React Testing Library.
+Kunjungi website Pelaut Hebat untuk mencoba fitur lengkap:
+👉 **[https://pelauthebat.vercel.app/](https://pelauthebat.vercel.app/)**
+
+Di sana, kamu bisa langsung:
+
+* Melihat **prakiraan cuaca terkini**
+* Mendapatkan **rekomendasi AI yang mudah dipahami**
+* Mengecek **kondisi laut sesuai lokasi kamu**
+* Melihat **perubahan cuaca 24 jam ke depan**
+* Mengetahui **waktu terbaik untuk berlayar** dengan tampilan visual menarik
 
 ---
 
-🌐 Deployment
+## 🧪 Testing (Optional)
+
+Segera hadir dengan **Jest & React Testing Library**.
+
+---
+
+## 🌐 Deployment
 
 Gunakan [Vercel](https://vercel.com/) untuk build otomatis.
 
-✅ Setup
+### ✅ Setup
 
-* Tambahkan environment variable di dashboard Vercel (copy dari `.env.local`)
+* Tambahkan environment variable dari `.env.local`
 * Jalankan build production:
 
 ```bash
@@ -140,16 +230,15 @@ npm start
 
 ---
 
-📄 License
+## 📄 License
 
 MIT © 2025 Ocean Safety Hub - Pelaut Hebat
 
 ---
 
-📬 Kontak & Bantuan
+## 📬 Kontak & Bantuan
 
-* 🌐 Website: [pelauthebat.id](https://pelauthebat.id)
+* 🌐 Website: [pelauthebat.vercel.app]([https://pelauthebat.id](https://pelauthebat.vercel.app/))
 * 📩 Email: [support@pelaut-hebat.com](mailto:support@pelaut-hebat.com)
-* 🐙 GitHub Issues: [Repo Issues](https://github.com/bellputrii/fe_pelautHebat/issues)
+* 🐙 GitHub Issues: [Repo Issues](https://github.com/bellputrii/fe_pelautHebat)
 
----
