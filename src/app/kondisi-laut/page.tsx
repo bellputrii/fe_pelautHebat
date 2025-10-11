@@ -427,8 +427,21 @@ export default function KondisiLautPage() {
                 )}
               </div>
 
+              {/* <div className="xl:col-span-3 space-y-4 sm:space-y-6"> */}
               {/* Main Content Area */}
               <div className="xl:col-span-3 space-y-4 sm:space-y-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-medium text-blue-800 text-sm">Perhatian</h3>
+                      <p className="text-blue-700 text-sm mt-1">
+                        Peta dapat digunakan untuk memilih lokasi di darat maupun perairan, namun analisis kondisi laut hanya valid untuk daerah perairan.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Map Section */}
                 <div className="h-64 sm:h-80 md:h-96 w-full rounded-xl sm:rounded-2xl overflow-hidden shadow-lg bg-white border border-gray-200">
                   <LeafletMap 
